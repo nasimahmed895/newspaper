@@ -121,6 +121,7 @@
         .article-card:hover .article-card-img { transform: scale(1.04); }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .dd-open .dd-menu { display: block !important; }
     </style>
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-900">
@@ -185,13 +186,31 @@
                 {{-- Desktop Nav --}}
                 @php $navCategories = \App\Models\Category::where('is_active', true)->orderBy('order')->get(); @endphp
                 <nav class="hidden lg:flex items-center space-x-1" aria-label="Main navigation">
-                    <a href="{{ url('/') }}" class="px-3 py-2 text-sm font-semibold text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition">Home</a>
-                    @foreach($navCategories->take(7) as $cat)
+                    <a href="{{ url('/') }}"
+                       class="px-3 py-2 text-sm font-semibold rounded-md transition whitespace-nowrap {{ request()->routeIs('home') ? 'text-red-700 bg-red-50' : 'text-gray-700 hover:text-red-600 hover:bg-red-50' }}">Home</a>
+                    @foreach($navCategories->take(5) as $cat)
                         <a href="{{ route('categories.show', $cat->slug) }}"
-                           class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition whitespace-nowrap">
+                           class="px-3 py-2 text-sm font-medium rounded-md transition whitespace-nowrap {{ request()->routeIs('categories.show') && request()->route('slug') === $cat->slug ? 'text-red-700 bg-red-50' : 'text-gray-600 hover:text-red-600 hover:bg-red-50' }}">
                             {{ $cat->name }}
                         </a>
                     @endforeach
+                    @if($navCategories->count() > 5)
+                    <div class="relative" id="more-dropdown">
+                        <button onclick="document.getElementById('more-dropdown').classList.toggle('dd-open')" type="button" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition whitespace-nowrap flex items-center gap-1">
+                            More
+                            <svg class="w-3.5 h-3.5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="dd-menu absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl py-2 min-w-[180px] z-50" style="display:none">
+                            @foreach($navCategories->skip(5) as $cat)
+                            <a href="{{ route('categories.show', $cat->slug) }}"
+                               onclick="document.getElementById('more-dropdown').classList.remove('dd-open')"
+                               class="block px-4 py-2 text-sm {{ request()->routeIs('categories.show') && request()->route('slug') === $cat->slug ? 'text-red-700 bg-red-50 font-semibold' : 'text-gray-700 hover:text-red-600 hover:bg-red-50' }}">
+                                {{ $cat->name }}
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
                 </nav>
 
                 {{-- Search + Mobile toggle --}}
@@ -242,25 +261,26 @@
                 </div>
             </form>
             <nav class="px-3 py-4">
-                <a href="{{ url('/') }}" class="flex items-center px-4 py-3 text-base font-semibold text-gray-900 hover:text-red-600 hover:bg-red-50 rounded-xl transition">
-                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ url('/') }}"
+                   class="flex items-center px-4 py-3 text-base rounded-xl transition {{ request()->routeIs('home') ? 'text-red-700 bg-red-50 font-bold' : 'font-semibold text-gray-900 hover:text-red-600 hover:bg-red-50' }}">
+                    <svg class="w-5 h-5 mr-3 {{ request()->routeIs('home') ? 'text-red-500' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                     Home
                 </a>
                 @foreach($navCategories as $cat)
                 <a href="{{ route('categories.show', $cat->slug) }}"
-                   class="flex items-center px-4 py-3 text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-xl transition">
+                   class="flex items-center px-4 py-3 text-base rounded-xl transition {{ request()->routeIs('categories.show') && request()->route('slug') === $cat->slug ? 'text-red-700 bg-red-50 font-bold' : 'font-medium text-gray-700 hover:text-red-600 hover:bg-red-50' }}">
                     <span class="w-2 h-2 rounded-full mr-3 flex-shrink-0" style="background-color: {{ $cat->color ?? '#6B7280' }}"></span>
                     {{ $cat->name }}
                 </a>
                 @endforeach
             </nav>
             <div class="px-5 py-4 border-t border-gray-100 space-y-1">
-                <a href="/about" class="block px-4 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition">About Us</a>
-                <a href="/editorial-policy" class="block px-4 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Editorial Policy</a>
-                <a href="/contact" class="block px-4 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Contact</a>
-                <a href="/privacy-policy" class="block px-4 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Privacy Policy</a>
+                <a href="/about" class="block px-4 py-2.5 text-sm rounded-lg transition {{ request()->routeIs('about') ? 'text-red-700 bg-red-50 font-bold' : 'text-gray-600 hover:text-red-600 hover:bg-red-50' }}">About Us</a>
+                <a href="/editorial-policy" class="block px-4 py-2.5 text-sm rounded-lg transition {{ request()->routeIs('editorial-policy') ? 'text-red-700 bg-red-50 font-bold' : 'text-gray-600 hover:text-red-600 hover:bg-red-50' }}">Editorial Policy</a>
+                <a href="/contact" class="block px-4 py-2.5 text-sm rounded-lg transition {{ request()->routeIs('contact') ? 'text-red-700 bg-red-50 font-bold' : 'text-gray-600 hover:text-red-600 hover:bg-red-50' }}">Contact</a>
+                <a href="/privacy-policy" class="block px-4 py-2.5 text-sm rounded-lg transition {{ request()->routeIs('privacy-policy') ? 'text-red-700 bg-red-50 font-bold' : 'text-gray-600 hover:text-red-600 hover:bg-red-50' }}">Privacy Policy</a>
             </div>
         </div>
     </div>
@@ -334,7 +354,7 @@
                     <ul class="space-y-2.5">
                         @foreach($navCategories as $cat)
                         <li>
-                            <a href="{{ route('categories.show', $cat->slug) }}" class="text-sm text-gray-400 hover:text-white transition flex items-center">
+                            <a href="{{ route('categories.show', $cat->slug) }}" class="text-sm transition flex items-center {{ request()->routeIs('categories.show') && request()->route('slug') === $cat->slug ? 'text-white' : 'text-gray-400 hover:text-white' }}">
                                 <span class="w-1.5 h-1.5 rounded-full mr-2.5 flex-shrink-0" style="background-color: {{ $cat->color ?? '#6B7280' }}"></span>
                                 {{ $cat->name }}
                             </a>
@@ -347,11 +367,11 @@
                 <div>
                     <h4 class="text-white font-bold text-sm uppercase tracking-wider mb-5">Company</h4>
                     <ul class="space-y-2.5">
-                        <li><a href="/about" class="text-sm text-gray-400 hover:text-white transition">About WorldPulse24</a></li>
-                        <li><a href="/editorial-policy" class="text-sm text-gray-400 hover:text-white transition">Editorial Policy</a></li>
-                        <li><a href="/contact" class="text-sm text-gray-400 hover:text-white transition">Contact Us</a></li>
+                        <li><a href="/about" class="text-sm transition {{ request()->routeIs('about') ? 'text-white' : 'text-gray-400 hover:text-white' }}">About WorldPulse24</a></li>
+                        <li><a href="/editorial-policy" class="text-sm transition {{ request()->routeIs('editorial-policy') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Editorial Policy</a></li>
+                        <li><a href="/contact" class="text-sm transition {{ request()->routeIs('contact') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Contact Us</a></li>
                         <li><a href="/contact" class="text-sm text-gray-400 hover:text-white transition">Submit a Correction</a></li>
-                        <li><a href="/privacy-policy" class="text-sm text-gray-400 hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="/privacy-policy" class="text-sm transition {{ request()->routeIs('privacy-policy') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Privacy Policy</a></li>
                         <li><a href="/admin" class="text-sm text-gray-400 hover:text-white transition">Admin Login</a></li>
                     </ul>
                 </div>
@@ -494,6 +514,15 @@
             bar.style.width = pct + '%';
         }, { passive: true });
     })();
+
+    // ─── More Dropdown ────────────────────────────────────────────
+    document.addEventListener('click', function (e) {
+        var dd = document.getElementById('more-dropdown');
+        if (!dd) return;
+        if (dd.classList.contains('dd-open') && !dd.contains(e.target)) {
+            dd.classList.remove('dd-open');
+        }
+    });
     </script>
 </body>
 </html>

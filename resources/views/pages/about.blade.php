@@ -76,19 +76,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 p-8 mb-8">
         <h2 class="text-2xl font-black text-gray-900 mb-4">What We Cover</h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            @php
-            $sections = [
-                ['World News', '#EF4444'],
-                ['Politics', '#DC2626'],
-                ['Business', '#10B981'],
-                ['Technology', '#3B82F6'],
-                ['Science', '#8B5CF6'],
-                ['Health', '#F59E0B'],
-                ['Sports', '#06B6D4'],
-                ['Entertainment', '#EC4899'],
-            ];
-            @endphp
-            @foreach($sections as [$name, $color])
+            @foreach($coverages as [$name, $color])
             <div class="flex items-center gap-2 text-sm font-semibold text-gray-700 bg-gray-50 px-3 py-2.5 rounded-xl">
                 <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ $color }}"></span>
                 {{ $name }}

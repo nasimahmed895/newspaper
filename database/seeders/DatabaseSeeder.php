@@ -31,6 +31,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Sports', 'slug' => 'sports', 'description' => 'Sports coverage and athletics', 'color' => '#06B6D4', 'order' => 6],
             ['name' => 'Entertainment', 'slug' => 'entertainment', 'description' => 'Movies, music, and pop culture', 'color' => '#EC4899', 'order' => 7],
             ['name' => 'Politics', 'slug' => 'politics', 'description' => 'Political news and analysis', 'color' => '#DC2626', 'order' => 8],
+            ['name' => 'Climate', 'slug' => 'climate', 'description' => 'Climate change, environment, and sustainability', 'color' => '#059669', 'order' => 9],
+            ['name' => 'Travel', 'slug' => 'travel', 'description' => 'Destinations, culture, and travel guides', 'color' => '#F97316', 'order' => 10],
+            ['name' => 'Culture', 'slug' => 'culture', 'description' => 'Arts, books, and cultural commentary', 'color' => '#D946EF', 'order' => 11],
         ];
 
         foreach ($categories as $cat) {
@@ -46,6 +49,7 @@ class DatabaseSeeder extends Seeder
             ['key' => 'automation.auto_publish', 'value' => 'true', 'group' => 'automation', 'label' => 'Auto-publish Generated Articles', 'type' => 'boolean'],
             ['key' => 'automation.max_articles', 'value' => '5', 'group' => 'automation', 'label' => 'Max Articles Per Generation', 'type' => 'text'],
             ['key' => 'automation.ai_model', 'value' => 'gpt-4o', 'group' => 'automation', 'label' => 'AI Model', 'type' => 'text'],
+            ['key' => 'app.admin_email', 'value' => env('ADMIN_EMAIL', 'admin@worldpulse24.news'), 'group' => 'email', 'label' => 'Admin Email', 'type' => 'text'],
         ];
 
         foreach ($settings as $setting) {

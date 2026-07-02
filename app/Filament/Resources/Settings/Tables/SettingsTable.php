@@ -49,6 +49,7 @@ class SettingsTable
                         'general' => 'General',
                         'seo' => 'SEO',
                         'social' => 'Social Media',
+                        'email' => 'Email',
                         'ads' => 'Advertising',
                         'api' => 'API Keys',
                         'automation' => 'Automation',

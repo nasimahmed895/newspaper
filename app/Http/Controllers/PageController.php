@@ -6,6 +6,7 @@ use App\Mail\ContactNotification;
 use App\Mail\NewsletterWelcome;
 use App\Models\ContactSubmission;
 use App\Models\NewsletterSubscriber;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -14,7 +15,23 @@ class PageController extends Controller
 {
     public function about()
     {
-        return view('pages.about');
+        $defaultSections = [
+            ['World News', '#EF4444'],
+            ['Politics', '#DC2626'],
+            ['Business', '#10B981'],
+            ['Technology', '#3B82F6'],
+            ['Science', '#8B5CF6'],
+            ['Health', '#F59E0B'],
+            ['Sports', '#06B6D4'],
+            ['Entertainment', '#EC4899'],
+        ];
+
+        $coverages = json_decode(
+            Setting::getValue('about_coverages', json_encode($defaultSections)),
+            true
+        );
+
+        return view('pages.about', compact('coverages'));
     }
 
     public function editorialPolicy()
