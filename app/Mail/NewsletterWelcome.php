@@ -13,6 +13,8 @@ class NewsletterWelcome extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
+    public function __construct(public readonly string $unsubscribeUrl = '') {}
+
     public function envelope(): Envelope
     {
         return new Envelope(subject: 'Welcome to ' . config('app.name') . ' Newsletter');

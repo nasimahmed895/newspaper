@@ -6,6 +6,11 @@
 <p>We cover: Technology, Politics, Business, Health, Sports, Entertainment, and World News — fresh articles published every 2 hours.</p>
 <p>Visit us anytime at <a href="{{ config('app.url') }}" style="color:#e11d48">{{ config('app.url') }}</a></p>
 <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
-<p style="font-size:12px;color:#999">You received this because you subscribed at {{ config('app.name') }}. If this was a mistake, you can ignore this email.</p>
+<p style="font-size:12px;color:#999">
+    You received this because you subscribed at {{ config('app.name') }}.
+    @if(!empty($unsubscribeUrl))
+        <a href="{{ $unsubscribeUrl }}" style="color:#999">Unsubscribe</a>
+    @endif
+</p>
 </body>
 </html>

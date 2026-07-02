@@ -8,6 +8,7 @@ use App\Models\ContactSubmission;
 use App\Models\NewsletterSubscriber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class PageController extends Controller
 {
@@ -61,9 +62,21 @@ class PageController extends Controller
         );
 
         if ($subscriber->wasRecentlyCreated) {
-            Mail::to($data['email'])->queue(new NewsletterWelcome());
+            $unsubscribeUrl = URL::signedRoute('newsletter.unsubscribe', ['email' => $data['email']]);
+            Mail::to($data['email'])->queue(new NewsletterWelcome($unsubscribeUrl));
         }
 
         return back()->with('newsletter_success', 'You are subscribed. Thank you for joining ' . config('app.name') . '.');
+    }
+
+    public function unsubscribe(Request $request)
+    {
+        $email = $request->query('email');
+
+        if ($email) {
+            NewsletterSubscriber::where('email', $email)->update(['is_active' => false]);
+        }
+
+        return view('pages.unsubscribed');
     }
 }

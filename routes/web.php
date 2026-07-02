@@ -29,3 +29,8 @@ Route::middleware('throttle:5,1')->group(function () {
     Route::post('/contact', [PageController::class, 'contactSubmit'])->name('contact.submit');
     Route::post('/newsletter', [PageController::class, 'newsletter'])->name('newsletter');
 });
+
+// Newsletter unsubscribe (signed URL — no auth needed)
+Route::get('/newsletter/unsubscribe', [PageController::class, 'unsubscribe'])
+    ->middleware('signed')
+    ->name('newsletter.unsubscribe');
