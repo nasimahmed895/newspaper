@@ -49,8 +49,9 @@ return [
     ],
 
     'google' => [
-        'indexing_api_key' => env('GOOGLE_INDEXING_API_KEY'),
-        'indexing_client_email' => env('GOOGLE_INDEXING_CLIENT_EMAIL'),
+        'indexing_api_key'     => env('GOOGLE_INDEXING_API_KEY'),
+        'indexing_client_email'=> env('GOOGLE_INDEXING_CLIENT_EMAIL'),
+        'indexing_private_key' => env('GOOGLE_INDEXING_PRIVATE_KEY'),
     ],
 
 ];

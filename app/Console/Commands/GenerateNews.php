@@ -46,43 +46,45 @@ class GenerateNews extends Command
             return Command::FAILURE;
         }
 
-        // Resolve configuration
-        $autoPublish = $this->resolvePublishSetting();
-        $limit = $this->resolveLimit();
+        $autoPublish   = $this->resolvePublishSetting();
+        $limit         = $this->resolveLimit();
         $specificTopic = $this->option('topic');
 
-        // Get topics
-        $topics = $specificTopic
-            ? $this->getSpecificTopic($specificTopic)
-            : $this->getTrendingTopics($limit);
+        // Load active categories ordered by priority
+        $categories = Category::where('is_active', true)->orderBy('order')->get();
 
-        if (empty($topics)) {
-            $this->warn('No topics available for article generation.');
-            return Command::SUCCESS;
+        if ($categories->isEmpty()) {
+            $categories = collect([$this->getOrCreateDefaultCategory()])->filter();
         }
 
-        // Ensure at least one category exists
-        $category = $this->getOrCreateDefaultCategory();
-        if (!$category) {
+        if ($categories->isEmpty()) {
             $this->error('No categories available. Create a category first in the admin panel.');
             return Command::FAILURE;
         }
 
+        $this->info("📂 Found {$categories->count()} active categories.");
+
         $generated = 0;
-        $errors = 0;
+        $errors    = 0;
         $log = NewsGenerationLog::create([
-            'topic' => $specificTopic ?? 'trending',
-            'status' => 'in_progress',
+            'topic'          => $specificTopic ?? 'category-based',
+            'status'         => 'in_progress',
             'articles_count' => 0,
         ]);
 
-        foreach ($topics as $index => $topicData) {
-            if ($generated >= $limit) {
-                break;
-            }
+        // Build category queue: cycle through categories up to $limit slots
+        $categoryList = $categories->values();
+        $totalCats    = $categoryList->count();
 
-            $topic = is_string($topicData) ? $topicData : ($topicData['title'] ?? '');
-            $this->info("  [{$generated}/{$limit}] Generating article for: {$topic}");
+        for ($index = 0; $index < $limit; $index++) {
+            $category = $categoryList[$index % $totalCats];
+
+            // Topic: use CLI option on first slot only, else fetch per category
+            $topic = ($specificTopic && $index === 0)
+                ? $specificTopic
+                : $this->getTopicForCategory($category);
+
+            $this->info("  [{$generated}/{$limit}] [{$category->name}] Topic: {$topic}");
 
             try {
                 $result = $this->generateSingleArticle($topic, $category, $autoPublish);
@@ -92,7 +94,7 @@ class GenerateNews extends Command
                     $this->info("    ✅ Published: {$result->title}");
                 } else {
                     $errors++;
-                    $this->warn("    ❌ Failed to generate article for: {$topic}");
+                    $this->warn("    ❌ Failed for: {$topic}");
                 }
             } catch (\Throwable $e) {
                 $errors++;
@@ -100,19 +102,25 @@ class GenerateNews extends Command
                 $this->error("    ❌ Error: {$e->getMessage()}");
             }
 
-            // Rate limiting delay between articles
-            if ($index < count($topics) - 1) {
+            if ($index < $limit - 1) {
                 usleep(1000000);
             }
         }
 
-        // Update log
+        $status = $errors === 0 ? 'success' : ($generated > 0 ? 'partial' : 'failed');
+
         $log->update([
-            'status' => $errors === 0 ? 'success' : ($generated > 0 ? 'partial' : 'failed'),
+            'status'         => $status,
             'articles_count' => $generated,
         ]);
 
-        // Clear cache
+        if ($status === 'failed') {
+            Log::error("[news:generate] COMPLETE FAILURE — 0 articles generated, {$errors} errors.");
+            $this->sendFailureAlert($errors);
+        } elseif ($status === 'partial') {
+            Log::warning("[news:generate] Partial run — {$generated} generated, {$errors} failed.");
+        }
+
         Cache::flush();
 
         $this->newLine();
@@ -120,6 +128,43 @@ class GenerateNews extends Command
         $this->info("   Run 'php artisan news:update-sitemap' to regenerate the sitemap.");
 
         return Command::SUCCESS;
+    }
+
+    protected function getTopicForCategory(Category $category): string
+    {
+        $this->info("    📡 Fetching trending topic for [{$category->name}]...");
+
+        $recentTitles = \App\Models\Article::where('category_id', $category->id)
+            ->where('created_at', '>=', now()->subHours(24))
+            ->pluck('trending_topic')
+            ->map(fn ($t) => strtolower(trim($t ?? '')))
+            ->filter()
+            ->all();
+
+        $trends = $this->trendsService->fetchMultiRegionTrends(20);
+        $categoryKeywords = strtolower($category->name . ' ' . ($category->description ?? ''));
+
+        foreach ($trends as $trend) {
+            $title    = strtolower($trend['title'] ?? '');
+            $titleKey = strtolower(trim($trend['title'] ?? ''));
+
+            // Skip if written in last 24h
+            if (in_array($titleKey, $recentTitles, true)) {
+                continue;
+            }
+
+            foreach (explode(' ', $categoryKeywords) as $keyword) {
+                if (strlen($keyword) > 3 && str_contains($title, $keyword)) {
+                    $this->info("    ✓ Matched Google Trend: {$trend['title']}");
+                    return $trend['title'];
+                }
+            }
+        }
+
+        return $this->openRouter->fetchTopicForCategory(
+            $category->name,
+            $category->description ?? ''
+        );
     }
 
     protected function generateSingleArticle(string $topic, Category $category, bool $autoPublish): ?Article
@@ -153,7 +198,7 @@ class GenerateNews extends Command
             'featured_image' => $imageResult['url'],
             'image_credit' => $imageResult['credit'],
             'image_source' => $imageResult['source'],
-            'author' => 'News Desk',
+            'author' => $articleData['author'] ?? 'News Desk',
             'source' => 'Trending Topics',
             'trending_topic' => $topic,
             'is_published' => $autoPublish,
@@ -168,19 +213,21 @@ class GenerateNews extends Command
         return $article;
     }
 
-    protected function getTrendingTopics(int $limit): array
+    protected function sendFailureAlert(int $errors): void
     {
-        $this->info('📡 Fetching trending topics from Google Trends...');
-        $topics = $this->trendsService->fetchMultiRegionTrends($limit);
-        $this->info("   Found " . count($topics) . " trending topics.");
+        $adminEmail = config('app.admin_email');
+        if (!$adminEmail) {
+            return;
+        }
 
-        return $topics;
-    }
-
-    protected function getSpecificTopic(string $topic): array
-    {
-        $this->info("📝 Using specific topic: {$topic}");
-        return [['title' => $topic, 'description' => '']];
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "WorldPulse24 news generation FAILED.\n\n{$errors} error(s), 0 articles published.\n\nCheck laravel.log for details.",
+                fn ($m) => $m->to($adminEmail)->subject('[WorldPulse24] News Generation FAILED')
+            );
+        } catch (\Throwable $e) {
+            Log::error("Failed to send failure alert email: {$e->getMessage()}");
+        }
     }
 
     protected function getOrCreateDefaultCategory(): ?Category

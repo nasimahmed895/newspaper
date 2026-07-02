@@ -11,15 +11,21 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('categories.show');
 Route::get('/article/{slug}', [ArticleController::class, 'show'])->name('articles.show');
-Route::get('/search', [SearchController::class, 'index'])->name('search');
-Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
+
+// Search — 30 requests/minute
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
+    Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
+});
 
 // Static EEAT pages
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/editorial-policy', [PageController::class, 'editorialPolicy'])->name('editorial-policy');
 Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('privacy-policy');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
-Route::post('/contact', [PageController::class, 'contactSubmit'])->name('contact.submit');
 
-// Newsletter
-Route::post('/newsletter', [PageController::class, 'newsletter'])->name('newsletter');
+// Forms — 5 submissions/minute
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/contact', [PageController::class, 'contactSubmit'])->name('contact.submit');
+    Route::post('/newsletter', [PageController::class, 'newsletter'])->name('newsletter');
+});

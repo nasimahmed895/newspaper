@@ -45,6 +45,20 @@ class ImageService
                 return $imageResult;
             }
 
+            $body = $response->body();
+
+            // Reject oversized files (5 MB max)
+            if (strlen($body) > 5 * 1024 * 1024) {
+                Log::warning("Downloaded image exceeds 5 MB, using remote URL: {$remoteUrl}");
+                return $imageResult;
+            }
+
+            // Verify it's actually a valid image
+            if (!@getimagesizefromstring($body)) {
+                Log::warning("Downloaded file is not a valid image, using remote URL: {$remoteUrl}");
+                return $imageResult;
+            }
+
             $contentType = $response->header('Content-Type') ?? 'image/jpeg';
             $ext = match (true) {
                 str_contains($contentType, 'png')  => 'png',
@@ -54,7 +68,7 @@ class ImageService
             };
 
             $filename = 'images/articles/' . Str::uuid() . '.' . $ext;
-            Storage::disk('public')->put($filename, $response->body());
+            Storage::disk('public')->put($filename, $body);
 
             return array_merge($imageResult, [
                 'url'          => Storage::disk('public')->url($filename),

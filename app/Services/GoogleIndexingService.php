@@ -17,8 +17,9 @@ class GoogleIndexingService
 
     public function __construct()
     {
-        $this->apiKey = config('services.google.indexing_api_key');
-        $this->clientEmail = config('services.google.indexing_client_email');
+        $this->apiKey       = config('services.google.indexing_api_key');
+        $this->clientEmail  = config('services.google.indexing_client_email');
+        $this->privateKey   = str_replace('\n', "\n", (string) config('services.google.indexing_private_key', ''));
     }
 
     /**
@@ -113,7 +114,7 @@ class GoogleIndexingService
      */
     protected function getAccessToken(): ?string
     {
-        if (empty($this->apiKey) || empty($this->clientEmail)) {
+        if (empty($this->clientEmail) || empty($this->privateKey)) {
             return null;
         }
 
@@ -150,14 +151,11 @@ class GoogleIndexingService
      */
     protected function createJwt(): ?string
     {
-        $privateKeyContent = env('GOOGLE_INDEXING_PRIVATE_KEY');
+        $privateKeyContent = $this->privateKey;
 
         if (empty($privateKeyContent)) {
             return null;
         }
-
-        // Convert literal \n sequences to real newlines (for .env storage)
-        $privateKeyContent = str_replace('\n', "\n", $privateKeyContent);
 
         $now = time();
         $header = [

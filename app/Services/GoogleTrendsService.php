@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -69,21 +70,28 @@ class GoogleTrendsService
 
     public function fetchMultiRegionTrends(int $limitPerRegion = 5): array
     {
-        $regions = ['US', 'GB', 'CA'];
-        $allTopics = [];
+        return Cache::remember('google_trends_all', 3600, function () use ($limitPerRegion) {
+            $regions  = ['US', 'GB', 'CA'];
+            $topics   = [];
+            $seen     = [];
 
-        foreach ($regions as $geo) {
-            try {
-                $topics = $this->fetchTrendingTopics($geo, $limitPerRegion);
-                $allTopics = array_merge($allTopics, $topics);
-            } catch (\Throwable $e) {
-                Log::warning("Failed to fetch trends for {$geo}: {$e->getMessage()}");
+            foreach ($regions as $geo) {
+                try {
+                    foreach ($this->fetchTrendingTopics($geo, $limitPerRegion) as $topic) {
+                        $key = strtolower(trim($topic['title']));
+                        if (!isset($seen[$key])) {
+                            $seen[$key] = true;
+                            $topics[]   = $topic;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to fetch trends for {$geo}: {$e->getMessage()}");
+                }
             }
-        }
 
-        shuffle($allTopics);
-
-        return $allTopics;
+            shuffle($topics);
+            return $topics;
+        });
     }
 
     protected function getFallbackTopics(int $limit = 10): array

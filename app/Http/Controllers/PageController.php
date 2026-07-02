@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactNotification;
+use App\Mail\NewsletterWelcome;
+use App\Models\ContactSubmission;
+use App\Models\NewsletterSubscriber;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PageController extends Controller
 {
@@ -28,29 +33,37 @@ class PageController extends Controller
 
     public function contactSubmit(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:150',
-            'email' => 'required|email|max:255',
-            'subject' => 'required|string|max:100',
-            'message' => 'required|string|min:20|max:5000',
+        $data = $request->validate([
+            'name'        => 'required|string|max:150',
+            'email'       => 'required|email|max:255',
+            'subject'     => 'required|string|max:100',
+            'message'     => 'required|string|min:20|max:5000',
             'article_url' => 'nullable|url|max:500',
         ]);
 
-        \Illuminate\Support\Facades\Log::info('Contact form submission', [
-            'name' => $request->name,
-            'email' => $request->email,
-            'subject' => $request->subject,
-            'article_url' => $request->article_url,
-            'message' => substr($request->message, 0, 200),
-        ]);
+        ContactSubmission::create(array_merge($data, ['ip' => $request->ip()]));
+
+        $adminEmail = config('app.admin_email');
+        if ($adminEmail) {
+            Mail::to($adminEmail)->queue(new ContactNotification($data));
+        }
 
         return back()->with('contact_success', 'Your message has been received. We will respond within 2 business days.');
     }
 
     public function newsletter(Request $request)
     {
-        $request->validate(['email' => 'required|email|max:255']);
+        $data = $request->validate(['email' => 'required|email|max:255']);
 
-        return back()->with('newsletter_success', 'You are subscribed. Thank you for joining WorldPulse24.');
+        $subscriber = NewsletterSubscriber::firstOrCreate(
+            ['email' => $data['email']],
+            ['ip' => $request->ip(), 'is_active' => true]
+        );
+
+        if ($subscriber->wasRecentlyCreated) {
+            Mail::to($data['email'])->queue(new NewsletterWelcome());
+        }
+
+        return back()->with('newsletter_success', 'You are subscribed. Thank you for joining ' . config('app.name') . '.');
     }
 }
