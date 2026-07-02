@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ImageService
 {
@@ -21,10 +23,47 @@ class ImageService
     {
         $unsplashResult = $this->searchUnsplash($topic);
         if ($unsplashResult) {
-            return $unsplashResult;
+            return $this->downloadAndStore($unsplashResult);
         }
 
-        return $this->generateWithAI($articleTitle, $articleExcerpt);
+        $aiResult = $this->generateWithAI($articleTitle, $articleExcerpt);
+        return $this->downloadAndStore($aiResult);
+    }
+
+    protected function downloadAndStore(array $imageResult): array
+    {
+        $remoteUrl = $imageResult['url'];
+
+        if (str_starts_with($remoteUrl, '/')) {
+            return $imageResult;
+        }
+
+        try {
+            $response = Http::timeout(20)->get($remoteUrl);
+
+            if (!$response->successful()) {
+                return $imageResult;
+            }
+
+            $contentType = $response->header('Content-Type') ?? 'image/jpeg';
+            $ext = match (true) {
+                str_contains($contentType, 'png')  => 'png',
+                str_contains($contentType, 'webp') => 'webp',
+                str_contains($contentType, 'gif')  => 'gif',
+                default                            => 'jpg',
+            };
+
+            $filename = 'images/articles/' . Str::uuid() . '.' . $ext;
+            Storage::disk('public')->put($filename, $response->body());
+
+            return array_merge($imageResult, [
+                'url'          => Storage::disk('public')->url($filename),
+                'original_url' => $remoteUrl,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning("Image download failed, using remote URL: {$e->getMessage()}");
+            return $imageResult;
+        }
     }
 
     protected function searchUnsplash(string $query): ?array
