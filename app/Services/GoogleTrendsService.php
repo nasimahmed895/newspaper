@@ -9,11 +9,6 @@ class GoogleTrendsService
 {
     protected const DAILY_TRENDS_URL = 'https://trends.google.com/trending/rss/daily?geo=';
 
-    protected const REALTIME_TRENDS_URL = 'https://trends.google.com/trending/rss/realtime?geo=';
-
-    /**
-     * Fetch trending topics from Google Trends RSS.
-     */
     public function fetchTrendingTopics(string $geo = 'US', int $limit = 10): array
     {
         $url = self::DAILY_TRENDS_URL . $geo;
@@ -28,15 +23,16 @@ class GoogleTrendsService
 
             if (!$response->successful()) {
                 Log::warning("Google Trends RSS returned status {$response->status()} for geo={$geo}");
-                return $this->getFallbackTopics();
+
+                return $this->getFallbackTopics($limit);
             }
 
-            $body = $response->body();
-            $xml = simplexml_load_string($body);
+            $xml = simplexml_load_string($response->body());
 
             if (!$xml || !isset($xml->channel->item)) {
                 Log::warning('Google Trends RSS returned no items');
-                return $this->getFallbackTopics();
+
+                return $this->getFallbackTopics($limit);
             }
 
             $topics = [];
@@ -63,20 +59,14 @@ class GoogleTrendsService
                 $count++;
             }
 
-            if (empty($topics)) {
-                return $this->getFallbackTopics();
-            }
-
-            return $topics;
+            return empty($topics) ? $this->getFallbackTopics($limit) : $topics;
         } catch (\Throwable $e) {
             Log::error("Google Trends fetch failed for geo={$geo}: {$e->getMessage()}");
-            return $this->getFallbackTopics();
+
+            return $this->getFallbackTopics($limit);
         }
     }
 
-    /**
-     * Fetch trending topics from multiple English-speaking countries.
-     */
     public function fetchMultiRegionTrends(int $limitPerRegion = 5): array
     {
         $regions = ['US', 'GB', 'CA'];
@@ -91,17 +81,26 @@ class GoogleTrendsService
             }
         }
 
-        // Shuffle to mix regions
         shuffle($allTopics);
 
         return $allTopics;
     }
 
-    /**
-     * Fallback topics when Google Trends is unavailable.
-     */
-    protected function getFallbackTopics(): array
+    protected function getFallbackTopics(int $limit = 10): array
     {
+        // Try AI-powered discovery first (uses SEARCH_MODEL = google/gemini-2.5-flash)
+        try {
+            $aiTopics = app(OpenRouterService::class)->fetchTrendingTopics($limit);
+            if (!empty($aiTopics)) {
+                Log::info('Using AI-powered trending topics as fallback');
+
+                return $aiTopics;
+            }
+        } catch (\Throwable $e) {
+            Log::warning("AI trending fallback failed: {$e->getMessage()}");
+        }
+
+        // Static fallback as last resort
         $fallbacks = [
             'Artificial Intelligence Breakthroughs Reshaping Industries Worldwide',
             'Global Economic Outlook: Markets React to Policy Changes',
@@ -115,14 +114,12 @@ class GoogleTrendsService
             'Education Technology Transforming Learning Experiences',
         ];
 
-        return array_map(function ($title) {
-            return [
-                'title' => $title,
-                'description' => "Latest developments in {$title}",
-                'url' => '',
-                'pub_date' => now()->toRssString(),
-                'geo' => 'US',
-            ];
-        }, $fallbacks);
+        return array_map(fn ($title) => [
+            'title' => $title,
+            'description' => "Latest developments in {$title}",
+            'url' => '',
+            'pub_date' => now()->toRssString(),
+            'geo' => 'US',
+        ], array_slice($fallbacks, 0, $limit));
     }
 }

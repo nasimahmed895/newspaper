@@ -35,10 +35,12 @@ return [
         ],
     ],
 
-    'openai' => [
-        'api_key' => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL', 'gpt-4o'),
-        'organization' => env('OPENAI_ORGANIZATION'),
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
+        'search_model' => env('SEARCH_MODEL', 'google/gemini-2.5-flash'),
+        'text_model' => env('TEXT_MODEL', 'openai/gpt-4o-mini'),
+        'image_model' => env('IMAGE_MODEL', 'bytedance/sdxl-lightning-4step'),
     ],
 
     'unsplash' => [

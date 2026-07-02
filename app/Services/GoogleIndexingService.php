@@ -150,12 +150,14 @@ class GoogleIndexingService
      */
     protected function createJwt(): ?string
     {
-        // Get private key from config or environment
         $privateKeyContent = env('GOOGLE_INDEXING_PRIVATE_KEY');
 
         if (empty($privateKeyContent)) {
             return null;
         }
+
+        // Convert literal \n sequences to real newlines (for .env storage)
+        $privateKeyContent = str_replace('\n', "\n", $privateKeyContent);
 
         $now = time();
         $header = [

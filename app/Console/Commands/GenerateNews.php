@@ -8,7 +8,7 @@ use App\Models\NewsGenerationLog;
 use App\Models\Setting;
 use App\Services\GoogleTrendsService;
 use App\Services\ImageService;
-use App\Services\OpenAIService;
+use App\Services\OpenRouterService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +22,7 @@ class GenerateNews extends Command
 
     protected $description = 'Generate news articles from trending topics using AI';
 
-    protected OpenAIService $openAI;
+    protected OpenRouterService $openRouter;
 
     protected GoogleTrendsService $trendsService;
 
@@ -31,7 +31,7 @@ class GenerateNews extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->openAI = app(OpenAIService::class);
+        $this->openRouter = app(OpenRouterService::class);
         $this->trendsService = app(GoogleTrendsService::class);
         $this->imageService = app(ImageService::class);
     }
@@ -40,9 +40,9 @@ class GenerateNews extends Command
     {
         $this->info('🚀 Starting news generation...');
 
-        // Check if API key is configured
-        if (empty(config('services.openai.api_key'))) {
-            $this->error('OpenAI API key is not configured. Set OPENAI_API_KEY in your .env file.');
+        if (empty(config('services.openrouter.api_key'))) {
+            $this->error('OpenRouter API key is not configured. Set OPENROUTER_API_KEY in your .env file.');
+
             return Command::FAILURE;
         }
 
@@ -124,8 +124,7 @@ class GenerateNews extends Command
 
     protected function generateSingleArticle(string $topic, Category $category, bool $autoPublish): ?Article
     {
-        // Generate article content via OpenAI
-        $articleData = $this->openAI->generateArticle($topic);
+        $articleData = $this->openRouter->generateArticle($topic);
 
         if (!$articleData) {
             return null;

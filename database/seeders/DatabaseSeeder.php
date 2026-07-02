@@ -39,10 +39,10 @@ class DatabaseSeeder extends Seeder
 
         // Seed settings
         $settings = [
-            ['key' => 'site.name', 'value' => 'News Portal', 'group' => 'general', 'label' => 'Site Name', 'type' => 'text'],
-            ['key' => 'site.description', 'value' => 'Your trusted source for breaking news and analysis', 'group' => 'general', 'label' => 'Site Description', 'type' => 'text'],
-            ['key' => 'seo.default_title', 'value' => 'News Portal - Your Trusted News Source', 'group' => 'seo', 'label' => 'Default SEO Title', 'type' => 'text'],
-            ['key' => 'seo.default_description', 'value' => 'Stay informed with the latest breaking news, trending stories, and in-depth analysis from around the world.', 'group' => 'seo', 'label' => 'Default SEO Description', 'type' => 'text'],
+            ['key' => 'site.name', 'value' => 'WorldPulse24', 'group' => 'general', 'label' => 'Site Name', 'type' => 'text'],
+            ['key' => 'site.description', 'value' => 'Independent AI-powered global news network delivering breaking news, analysis, and in-depth reporting.', 'group' => 'general', 'label' => 'Site Description', 'type' => 'text'],
+            ['key' => 'seo.default_title', 'value' => 'WorldPulse24 — Breaking News, World Events & Analysis', 'group' => 'seo', 'label' => 'Default SEO Title', 'type' => 'text'],
+            ['key' => 'seo.default_description', 'value' => 'WorldPulse24 delivers trusted breaking news, in-depth analysis, and real-time reporting on world events, politics, business, technology, science, health, sports, and entertainment.', 'group' => 'seo', 'label' => 'Default SEO Description', 'type' => 'text'],
             ['key' => 'automation.auto_publish', 'value' => 'true', 'group' => 'automation', 'label' => 'Auto-publish Generated Articles', 'type' => 'boolean'],
             ['key' => 'automation.max_articles', 'value' => '5', 'group' => 'automation', 'label' => 'Max Articles Per Generation', 'type' => 'text'],
             ['key' => 'automation.ai_model', 'value' => 'gpt-4o', 'group' => 'automation', 'label' => 'AI Model', 'type' => 'text'],

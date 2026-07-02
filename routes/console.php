@@ -5,11 +5,11 @@ use App\Console\Commands\SubmitToGoogleIndex;
 use App\Console\Commands\UpdateSitemap;
 use Illuminate\Support\Facades\Schedule;
 
-// News generation: run hourly to keep content fresh
-Schedule::command(GenerateNews::class)->hourly()->withoutOverlapping();
+// 12 articles/day — 1 every 2 hours at :00
+Schedule::command(GenerateNews::class)->cron('0 */2 * * *')->withoutOverlapping();
 
-// Update sitemap after news generation
-Schedule::command(UpdateSitemap::class)->hourlyAt(5)->withoutOverlapping();
+// Sitemap update 5 minutes after news generation
+Schedule::command(UpdateSitemap::class)->cron('5 */2 * * *')->withoutOverlapping();
 
-// Submit new articles to Google Indexing API hourly
-Schedule::command(SubmitToGoogleIndex::class)->hourlyAt(10)->withoutOverlapping();
+// Submit new articles to Google Indexing API 10 minutes after news generation
+Schedule::command(SubmitToGoogleIndex::class)->cron('10 */2 * * *')->withoutOverlapping();
