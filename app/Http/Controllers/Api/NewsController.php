@@ -76,6 +76,9 @@ class NewsController extends Controller
             'author'             => 'nullable|string|max:100',
             'source_url'         => 'nullable|url|max:500',
             'featured_image_url' => 'nullable|url|max:500',
+            'seo_title'          => 'nullable|string|max:70',
+            'seo_description'    => 'nullable|string|max:160',
+            'seo_keywords'       => 'nullable|string|max:500',
             'submitted_by_name'  => 'nullable|string|max:100',
             'submitted_by_email' => 'nullable|email|max:150',
         ]);
@@ -102,23 +105,28 @@ class NewsController extends Controller
 
         $slug = $this->uniqueSlug($validated['title']);
 
+        $wordCount = str_word_count(strip_tags($validated['content']));
+
         $article = Article::create([
-            'category_id'        => $category->id,
-            'api_partner_id'     => $partner->id,
-            'title'              => $validated['title'],
-            'slug'               => $slug,
-            'content'            => $validated['content'],
-            'excerpt'            => $excerpt,
-            'author'             => $validated['author'] ?? null,
-            'source_url'         => $validated['source_url'] ?? null,
-            'featured_image'     => $validated['featured_image_url'] ?? null,
-            'submitted_by_name'  => $validated['submitted_by_name'] ?? null,
-            'submitted_by_email' => $validated['submitted_by_email'] ?? null,
-            'status'             => 'pending',
-            'is_published'       => false,
-            'is_trending'        => false,
-            'view_count'         => 0,
-            'reading_time_minutes' => (int) ceil(str_word_count(strip_tags($validated['content'])) / 200),
+            'category_id'          => $category->id,
+            'api_partner_id'       => $partner->id,
+            'title'                => $validated['title'],
+            'slug'                 => $slug,
+            'content'              => $validated['content'],
+            'excerpt'              => $excerpt,
+            'author'               => $validated['author'] ?? null,
+            'source_url'           => $validated['source_url'] ?? null,
+            'featured_image'       => $validated['featured_image_url'] ?? null,
+            'seo_title'            => $validated['seo_title'] ?? null,
+            'seo_description'      => $validated['seo_description'] ?? null,
+            'seo_keywords'         => $validated['seo_keywords'] ?? null,
+            'submitted_by_name'    => $validated['submitted_by_name'] ?? null,
+            'submitted_by_email'   => $validated['submitted_by_email'] ?? null,
+            'status'               => 'pending',
+            'is_published'         => false,
+            'is_trending'          => false,
+            'view_count'           => 0,
+            'reading_time_minutes' => (int) ceil($wordCount / 200),
         ]);
 
         return response()->json([

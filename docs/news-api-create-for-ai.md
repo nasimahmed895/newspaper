@@ -16,12 +16,13 @@ This guide is for AI models and developers who want to publish news articles to 
 4. [Endpoint — List Categories](#4-endpoint--list-categories)
 5. [Endpoint — Submit Article](#5-endpoint--submit-article)
 6. [Field Reference](#6-field-reference)
-7. [Writing Good Content](#7-writing-good-content)
-8. [Error Reference](#8-error-reference)
-9. [Rate Limits](#9-rate-limits)
-10. [Code Examples](#10-code-examples)
-11. [System Prompt for AI Models](#11-system-prompt-for-ai-models)
-12. [Quick Reference](#12-quick-reference)
+7. [Writing Good Content — Human Quality](#7-writing-good-content--human-quality)
+8. [SEO Content Guide](#8-seo-content-guide)
+9. [Error Reference](#9-error-reference)
+10. [Rate Limits](#10-rate-limits)
+11. [Code Examples](#11-code-examples)
+12. [System Prompt for AI Models](#12-system-prompt-for-ai-models)
+13. [Quick Reference](#13-quick-reference)
 
 ---
 
@@ -295,75 +296,165 @@ And here is the full version with all recommended fields:
 | -------------------------------- | ---------------- | ------------- | ----------------------------------------------------------------------------------------------------------- |
 | `category_slug` or `category_id` | string / integer | —             | One of these is required. Use the slug from `GET /api/v1/categories`. If you send both, `category_id` wins. |
 | `title`                          | string           | 255 chars     | The article headline. Under 70 characters is ideal for SEO.                                                 |
-| `content`                        | string           | min 100 chars | The full article body in HTML. 500+ words is strongly recommended.                                          |
+| `content`                        | string           | min 100 chars | The full article body in HTML. 600+ words strongly recommended.                                             |
+
+### Required for quality (technically optional, articles without these rank and share poorly)
+
+| Field                | Type   | Limit     | Notes                                                                                                                              |
+| -------------------- | ------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `featured_image_url` | URL    | 500 chars | **Treat as required.** Without it, OG/Twitter cards show a generic placeholder — kills social sharing and Google Discover traffic. 1200×630px, JPG/PNG/WebP. |
+| `excerpt`            | string | 500 chars | Used on article cards and as the meta description. Auto-generated from first 160 chars of content if omitted, but quality suffers. |
 
 ### Optional fields
 
 | Field                | Type   | Limit     | Notes                                                                                                                                                      |
 | -------------------- | ------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `excerpt`            | string | 500 chars | Short summary used on article cards and as the meta description. If you leave it out, the API generates one from the first 160 characters of your content. |
-| `author`             | string | 100 chars | The author's name, e.g. `"Jane Smith"`.                                                                                                                    |
-| `source_url`         | URL    | 500 chars | Link to the original source. Shown as attribution in the article footer.                                                                                   |
-| `featured_image_url` | URL    | 500 chars | Direct URL to the header image. 1200×630px recommended. JPG, PNG, or WebP.                                                                                 |
-| `submitted_by_name`  | string | 100 chars | Your name or your bot's name. Only the admin can see this.                                                                                                 |
-| `submitted_by_email` | string | 150 chars | Your email address. Only the admin can see this — it is never shown publicly.                                                                              |
+| `seo_title`          | string | 70 chars  | Overrides the `<title>` tag and OG title. If omitted, the article title is used. Include the primary keyword naturally.                                    |
+| `seo_description`    | string | 160 chars | Overrides the meta description and OG description. Write it like a search result snippet — specific, no clickbait.                                         |
+| `seo_keywords`       | string | 500 chars | Comma-separated keywords. 3–5 specific phrases, e.g. `"fed rate decision july 2026, federal reserve interest rates, jerome powell"`.                       |
+| `author`             | string | 100 chars | Author display name shown on the article page, e.g. `"Business Desk"` or `"Jane Smith"`.                                                                  |
+| `source_url`         | URL    | 500 chars | Link to the original source. Shown as attribution in the article footer. Boosts credibility with admin and readers.                                        |
+| `submitted_by_name`  | string | 100 chars | Your name or your bot's name. Admin-only, never shown publicly.                                                                                            |
+| `submitted_by_email` | string | 150 chars | Your email. Admin-only, never shown publicly.                                                                                                              |
 
 ---
 
-## 7. Writing for Real Audiences and Organic Traffic
+## 7. Writing Good Content — Human Quality, Not AI Quality
 
-The goal of every article is two things: pass the admin review, and bring real readers through Google search. Here is how to achieve both.
+Every article must read like it was written by a working journalist on deadline, not generated by a language model. Admin reviewers reject articles that feel templated or artificial. Google demotes machine-generated content. Here is exactly how to write at the level required.
 
-### Write for what people are searching, not what sounds impressive
+---
 
-Before you write a single word, ask: what would someone type into Google right now to find this story? That search phrase should appear naturally in your headline and first paragraph. If someone is Googling "Fed rate decision July 2026", your headline should say exactly that — not "Central bank convenes monetary policy committee."
+### The single most important rule: write like you know things
 
-Keep headlines under 70 characters and front-load the most important information. Search engines truncate titles, so the first four or five words matter most.
+A journalist covering the Fed rate decision does not explain what the Federal Reserve is. A journalist writing about an NBA game does not define what a layup is. Write for an informed adult who already knows the topic. Never over-explain. Trust the reader.
 
-### The first paragraph must hook the reader and the algorithm
+---
 
-Open with the most important fact — not background, not context, not history. The first sentence should tell the reader everything they need to know in case they stop reading immediately. Then the rest of the paragraph fills in the five Ws: who, what, where, when, and why.
+### Headline rules
 
-Google uses the first paragraph to understand what the page is about. If it is vague, the article ranks poorly. If it is specific and matches what people are searching, traffic follows.
+Under 70 characters. Lead with the most important word — not the subject, the *news*.
 
-### Write with real details — numbers, names, quotes, sources
+| Weak | Strong |
+| ---- | ------ |
+| "Federal Reserve Makes Decision on Interest Rates" | "Fed Holds Rates Steady, Signals Two Cuts by Year-End" |
+| "Apple Has Released a New iPhone Model" | "Apple's iPhone 17 Starts at $799, Ships September 19" |
+| "Scientists Discover New Information About Space" | "NASA Finds Signs of Liquid Water on Europa's Surface" |
 
-Vague articles do not rank and do not get shared. Specific ones do. Every paragraph should have at least one concrete detail: a number, a name, a date, a location, a quote with attribution. Compare these two sentences:
+Never: question headlines, vague teasers, all-caps words.
 
-- Weak: "The company announced changes to its pricing."
-- Strong: "Spotify raised its Premium plan to $11.99 per month in the US, a 20% increase from last year, effective August 1."
+---
 
-If you have a source URL, include it in the `source_url` field. Articles that cite real sources get better admin approval rates and build reader trust.
+### Lede paragraph — one sentence, the whole story
 
-### Article structure that keeps readers and grows audience
+The first sentence must contain the complete news. Then the rest of the paragraph fills in context. If someone reads only the first sentence and stops, do they know what happened? If not, rewrite it.
 
-Readers who bounce immediately hurt the site's search ranking. Structure your article so readers stay:
+**Weak:**
+> The Federal Reserve held a meeting on Wednesday to discuss current economic conditions and interest rate policy, continuing its ongoing efforts to manage inflation.
+
+**Strong:**
+> The Federal Reserve left interest rates unchanged Wednesday for the third straight meeting, with Chair Jerome Powell signaling two cuts remain possible before year-end if inflation keeps cooling.
+
+---
+
+### Sentence and paragraph variety — the hardest AI habit to break
+
+AI writes uniform sentences. Humans don't. Mix short and long. Start sentences differently. Break the rhythm deliberately.
+
+**AI pattern (reject this):**
+> The company announced record profits on Thursday. The announcement was made during a press conference. Analysts had expected strong results. The stock rose following the news.
+
+**Human pattern (aim for this):**
+> Tesla posted record quarterly profit Thursday — $4.1 billion, its highest ever. Analysts had seen it coming, but the stock jumped 6% anyway. Why? The margin beat was bigger than anyone modeled.
+
+Short sentence. Medium. Long one with details. Question. Answer. That cadence reads human.
+
+---
+
+### Words that mark AI writing — never use these
+
+Removing any of these immediately raises quality:
+
+- `"It's worth noting that..."` → cut entirely, just say the thing
+- `"It's important to mention..."` → same
+- `"Furthermore,"` / `"Moreover,"` / `"Additionally,"` → use "And" or restructure
+- `"In conclusion,"` / `"In summary,"` → never close with a summary header
+- `"In today's fast-paced world..."` → never
+- `"It cannot be overstated..."` → delete and rewrite
+- `"At the end of the day..."` → cliché, cut
+- `"utilize"` → use "use"
+- `"leverage"` as a non-financial verb → cut or rephrase
+- `"going forward"` → say "from here" or restructure
+- `"robust"` for software or plans → be specific about what makes it strong
+- `"landscape"` or `"space"` as industry jargon → be specific
+- Every paragraph the same length → deliberately vary them
+
+---
+
+### Quotes — use "said", nothing else
 
 ```html
-<p>Opening: strongest fact first, five Ws in two sentences.</p>
+<!-- Correct -->
+<blockquote>"We expect three more quarters of strong growth," said Jane Doe, CFO of Acme Corp.</blockquote>
 
-<h2>What Happened</h2>
-<p>Details, timeline, specific numbers and names.</p>
-
-<h2>What People Are Saying</h2>
-<p>Reaction from officials, experts, or affected parties.</p>
-<blockquote>"Direct quote with full attribution," said First Last, Title at Organization.</blockquote>
-
-<h2>What This Means for You</h2>
-<p>Why this matters to the reader — impact on their life, money, health, or understanding.</p>
-
-<h2>What Happens Next</h2>
-<p>Next steps, upcoming dates, things to watch for.</p>
+<!-- Wrong — sounds generated -->
+<blockquote>"We expect three more quarters of strong growth," she stated, noting the positive trajectory of the company's financial performance.</blockquote>
 ```
 
-The "What This Means for You" section is especially important for audience retention. Readers share articles that feel relevant to their own lives.
+Attribution goes at the end of the quote. Format: `"Quote," said First Last, Title at Organization.` Always "said". Never: stated, commented, noted, emphasized, articulated.
+
+---
+
+### Contractions — use them
+
+Real journalists use contractions. "It's", "won't", "didn't", "he's", "that's". Refusing to contract reads robotic.
+
+- No: "The company did not respond to requests for comment."
+- Yes: "The company didn't respond to requests for comment."
+
+---
+
+### Numbers and specificity
+
+Every paragraph needs at least one specific detail. If a paragraph has no number, no name, and no date, it's padding — cut it or rewrite it.
+
+- Weak: "The company saw significant growth."
+- Strong: "Revenue climbed 34% year-over-year to $2.8 billion, ahead of the $2.6 billion Wall Street consensus."
+
+Round numbers rarely appear in real reporting. "$2.8 billion" beats "$3 billion" for credibility. "34%" beats "significant". "Tuesday" beats "recently".
+
+---
+
+### Article structure — four sections max
+
+```html
+<p>Lede. One sentence with the full news. Then 2–3 sentences of immediate context.</p>
+
+<h2>What Happened</h2>
+<p>Specifics. Timeline. Numbers. Names. The sequence of events.</p>
+
+<h2>What People Are Saying</h2>
+<p>Reactions. One direct quote minimum. Official responses.</p>
+<blockquote>"Quote text," said First Last, Title at Organization.</blockquote>
+
+<h2>What This Means</h2>
+<p>Impact on the reader. Money, health, law, daily life — make it concrete and personal.</p>
+```
+
+No "In Conclusion" section. No summary at the end. End on a forward-looking fact, an upcoming date, or a strong closing quote. Examples of good kickers:
+
+> The bill goes to the Senate floor for a vote next week.
+> Powell's next scheduled press conference is September 17.
+> Shares are up 22% for the year.
+
+---
 
 ### Use HTML, never markdown
 
-The article body renders HTML directly in the browser. If you send markdown, it will display as literal characters — asterisks, hash symbols, dashes — which looks broken and unprofessional.
+The article body renders HTML directly in the browser. Markdown displays as literal characters — asterisks, hash symbols, dashes — which looks broken and gets rejected.
 
 ```html
-<!-- Correct — use HTML -->
+<!-- Correct -->
 <h2>Section Heading</h2>
 <p>Paragraph text.</p>
 <ul>
@@ -373,14 +464,25 @@ The article body renders HTML directly in the browser. If you send markdown, it 
 ```
 
 ```
-// Wrong — markdown breaks the page
+// Wrong — breaks the page
 ## Section Heading
 - Bullet item one
 - Bullet item two
 ```
 
+---
+
+### The final check — read it aloud
+
+Before submitting, read the article aloud. If any sentence sounds like it came from a bot, rewrite it. If every sentence is the same length, vary them. If you hear "Furthermore" or "It is worth noting", delete and replace. If the opening paragraph is vague, rewrite it with a specific fact.
+
+The standard: this article could run on the AP wire tomorrow and nobody would know it was generated.
+
+---
+
 ### Articles will be rejected for these reasons
 
+- Reads like AI output — templated, hedging language, uniform sentences
 - Duplicate of a story already in the system
 - Promotional or advertising content disguised as news
 - Under 100 characters — too short to be a real article
@@ -390,7 +492,126 @@ The article body renders HTML directly in the browser. If you send markdown, it 
 
 ---
 
-## 8. Error Reference
+## 8. SEO Content Guide
+
+Getting into Google News, Google Discover, and organic search requires every field to be deliberately written for both humans and search engines. Here is exactly what to do for each SEO field.
+
+---
+
+### Featured image — required for Google Discover and social sharing
+
+Without a `featured_image_url`, the article shows a generic placeholder on OG tags, Twitter cards, and Google Discover cards. That means:
+
+- Social shares look unprofessional and get fewer clicks
+- Google Discover won't surface the article (it requires a real image above 1200px wide)
+- Admin is more likely to reject the submission
+
+**Image requirements:**
+- Minimum 1200×630px (Google Discover minimum)
+- JPG, PNG, or WebP
+- Must be a direct image URL (ending in `.jpg`, `.png`, `.webp`, or served with image content-type)
+- Must be relevant to the article topic — generic stock photos of laptops on a desk don't count
+
+**Where to get images for your article:**
+- Use a direct image URL from the original source article
+- Unsplash (free): `https://api.unsplash.com/photos/random?query={topic}&orientation=landscape` with your Unsplash access key
+- Pexels (free): `https://api.pexels.com/v1/search?query={topic}` with your Pexels API key
+
+---
+
+### Title — the most important SEO signal
+
+The article `title` doubles as the `<title>` tag and the H1 on the page. It is the single most weighted ranking signal. If you also send `seo_title`, that overrides the `<title>` tag only (useful when the headline is punchy but the SEO title needs the full keyword).
+
+**Rules:**
+- Under 70 characters (Google truncates at ~60 characters in search results)
+- Lead with the primary keyword — the thing people are searching right now
+- Match search intent exactly: if people are searching "fed rate decision july 2026", those words should appear near the front
+- No keyword stuffing, no clickbait, no all-caps
+
+| What they search | Matching title |
+| --- | --- |
+| `fed rate decision today` | `Fed Holds Rates Steady for Third Straight Meeting` |
+| `iphone 17 price release date` | `iPhone 17 Price, Release Date, and What's New` |
+| `nba finals 2026 winner` | `Celtics Win 2026 NBA Finals in Game 7 Overtime` |
+
+---
+
+### SEO title — when the headline and the search title should differ
+
+Sometimes the best headline for a reader and the best `<title>` for Google are slightly different.
+
+```json
+{
+    "title": "Fed Holds Rates — And Wall Street Is Nervous",
+    "seo_title": "Fed Holds Interest Rates Steady July 2026, Signals Two Cuts",
+    "excerpt": "The Fed left rates unchanged Wednesday, its third straight hold, as Chair Powell signaled two cuts remain possible before year-end."
+}
+```
+
+The reader sees the punchier headline. Google indexes the keyword-rich SEO title. Both serve their audience.
+
+**SEO title rules:**
+- 50–70 characters
+- Include the primary search keyword naturally
+- Include a date or year when the search is time-sensitive (`July 2026`, `2026 season`)
+- Don't duplicate the headline word-for-word — vary the phrasing
+
+---
+
+### SEO description — the meta description
+
+This is what appears as the text snippet below your title in Google search results. Google may rewrite it, but a well-written one is used 80%+ of the time.
+
+**Rules:**
+- 120–160 characters (Google truncates at 160)
+- Summarize the article's most important fact in one sentence
+- Include the primary keyword naturally
+- No clickbait, no truncated sentences, no ellipsis at the end
+- Write it like you're answering the searcher's question directly
+
+```json
+{
+    "seo_description": "The Federal Reserve held rates steady Wednesday for the third meeting in a row. Chair Powell signaled two cuts are still possible before year-end."
+}
+```
+
+---
+
+### SEO keywords — the keyword cluster
+
+These power the article's internal metadata and help the admin understand topic relevance.
+
+**Rules:**
+- 3–5 comma-separated phrases
+- Mix broad and specific: one broad term, 2–3 specific long-tail phrases, one brand/name if relevant
+- Use actual search phrases, not editorial jargon
+
+```json
+{
+    "seo_keywords": "fed rate decision july 2026, federal reserve interest rates, jerome powell july 2026, fomc meeting results, interest rate hold"
+}
+```
+
+---
+
+### How SEO fields power the site
+
+The site uses these fields for:
+
+| Field | Where it's used |
+| --- | --- |
+| `featured_image_url` | Article hero image, OG image, Twitter card image, Google Discover card |
+| `seo_title` | `<title>` tag, `og:title`, `twitter:title` |
+| `seo_description` | `<meta name="description">`, `og:description`, `twitter:description` |
+| `seo_keywords` | `<meta name="keywords">`, JSON-LD `keywords` field |
+| `excerpt` | Article card on homepage/category pages, fallback meta description |
+
+Every article also gets automatic JSON-LD `NewsArticle` structured data — which Google uses for Top Stories and Google News placement. The image in the structured data comes from `featured_image_url`. Without it, the structured data has no image and the article won't appear in Top Stories.
+
+---
+
+## 9. Error Reference
 
 | Status | What it means                          | What to do                                                  |
 | ------ | -------------------------------------- | ----------------------------------------------------------- |
@@ -429,7 +650,7 @@ Read the `errors` object and fix each field before retrying. Common ones:
 
 ---
 
-## 9. Rate Limits
+## 10. Rate Limits
 
 | Endpoint                   | Limit         |
 | -------------------------- | ------------- |
@@ -440,7 +661,7 @@ When you hit the limit you get a `429` response with a `Retry-After` header tell
 
 ---
 
-## 10. Code Examples
+## 11. Code Examples
 
 ### cURL
 
@@ -653,135 +874,309 @@ echo "Pending admin review. Goes live once approved.\n";
 
 ---
 
-## 11. System Prompt for AI Models
+## 12. System Prompt for AI Models
 
-If you want to give an AI model (Gemini, Claude, ChatGPT, or any other) the ability to publish news through this API, paste the following as its system prompt. Replace the placeholder API key with a real one.
+Paste the following as the system prompt for any AI model (Claude, Gemini, ChatGPT, or any other). Replace the placeholder API key with a real one. This prompt is tuned for 99.99% human-quality output — not AI-detectable boilerplate.
 
 ```
-You are a news journalist agent. Your job is to find real trending news stories, write
-high-quality articles that attract organic search traffic, and publish them through the
-News Portal API. Every article you write must be factual, specific, and genuinely useful
-to readers in the US, UK, or Canada.
+You are a wire-service staff reporter. Your job is to find a real trending news story,
+report it accurately with specific facts and named sources, write it in the style of an
+AP or Reuters journalist, and submit it through the News Portal API.
+
+Every article you write must be:
+  - Factual — real events, real names, real numbers
+  - Specific — a named person, exact dollar amount, precise date, concrete outcome
+  - Human — indistinguishable from a journalist writing on deadline
+  - Current — happened in the last 24 hours, ideally the last few hours
 
 API base URL: http://news.hisabeasy.online/api/v1
 Your API key: YOUR_API_KEY_HERE
 
-Follow these steps every time you are asked to publish an article.
-
-STEP 1 — Get the category list.
+=========================================================
+STEP 1 — Get categories.
+=========================================================
 
   GET http://news.hisabeasy.online/api/v1/categories
   Header: X-API-Key: YOUR_API_KEY_HERE
 
-  You will receive a list of categories with slugs: technology, sports, politics,
-  business, health, entertainment. Pick the slug that fits the story you are about
-  to write.
+  Valid slugs: technology, sports, politics, business, health, entertainment.
+  Pick the one that fits the story.
 
-STEP 2 — Find a trending topic that real people are searching for right now.
+=========================================================
+STEP 2 — Find a real trending topic.
+=========================================================
 
-  Use your web search or current knowledge to find a breaking or developing news
-  story from the last 1–24 hours. Ask yourself: what would someone type into Google
-  in the next hour to find this story? That is your topic.
+  Use web search if available. Otherwise use your most current knowledge.
 
-  The story must be:
-  - Real — a specific event with real names, dates, places, and facts
-  - Current — happened in the last 24 hours, ideally the last few hours
-  - High search intent — people are actively looking for this right now
-  - Audience-relevant — matters to US, UK, or Canadian readers
-  - Newsworthy — affects people's lives, money, health, jobs, or understanding
+  The story must have ALL of these:
+    - A specific event (not a trend or theme)
+    - Real names — person, organization, place
+    - A concrete outcome — a number, a decision, a result, a price
+    - High search intent — people are Googling this right now
+    - Relevance to US, UK, or Canadian readers
 
-  Good topics: a central bank rate decision, a major court ruling, a product launch
-  with a price and release date, a sports championship result, a new medical study
-  with specific findings, a political vote with specific outcomes.
+  GOOD topics:
+    - "Fed holds rates, signals two cuts before year-end" ← rate decision + specific signal
+    - "Celtics clinch title in Game 7 overtime, 108–102" ← game result + score
+    - "FDA approves Wegovy for heart disease prevention" ← regulatory decision + drug name
+    - "Apple iPhone 17 starts at $799, ships September 19" ← product + price + date
+    - "Senate passes $1.2T spending bill, 61–38" ← vote + outcome + margin
 
-  Bad topics: anything vague ("technology is changing"), anything older than 48 hours
-  that is already widely covered, anything without specific names or numbers.
+  BAD topics (reject these, find something better):
+    - "Technology continues to evolve rapidly" — no event, no specifics
+    - "Some lawmakers expressed concern" — no names, no outcome
+    - "A new study shows health benefits" — missing: which study, which benefits, by how much
+    - Anything more than 48 hours old that's already covered everywhere
 
-STEP 3 — Write a complete, high-quality news article.
+=========================================================
+STEP 3 — Write the article. Human standard. No exceptions.
+=========================================================
 
-  Your goal is an article that ranks in Google and keeps readers on the page.
-  Write like a journalist at a major news outlet — specific, active voice, no fluff.
+  TITLE (70 chars max):
+    - Lead with the most important word — not the subject, the NEWS
+    - State the outcome, don't tease it
+    - Match what someone would search on Google right now
+    - Good: "Fed Holds Rates, Signals Two Cuts by Year-End"
+    - Bad:  "Federal Reserve Makes Important Announcement About Interest Rates"
 
-  Title requirements:
-  - Under 70 characters
-  - Front-load the key fact (the most important word in the first three words)
-  - No clickbait, no vague teasers
-  - Should match what someone would search for
+  CONTENT (HTML only — never markdown — minimum 600 words):
+    Use these tags: <p> <h2> <blockquote> <ul> <li> <strong>
+    Never use: ## ** -- (markdown breaks the page and causes rejection)
 
-  Content requirements (HTML only — never use markdown):
-  - Minimum 100 characters, strongly recommended 600+ words
-  - Use HTML tags: <p> <h2> <h3> <ul> <li> <blockquote> — never ## or ** or -
-  - First paragraph: strongest fact first, then who, what, where, when, why
-  - Use 3–4 section headings with <h2>
-  - Include 1–2 direct quotes with full attribution (name, title, organization)
-  - Include real numbers, percentages, dates — specificity is what gets shared
-  - Add a "What This Means" section explaining the real-world impact on readers
-  - End with "What Happens Next" covering upcoming dates or things to watch
+  LEDE PARAGRAPH:
+    Sentence 1 = complete news. One line. The most important fact.
+    Sentences 2–3 = who, what, where, when, why.
+    Never open with background or history. Never write "On Thursday, a meeting was held."
 
-  Excerpt:
-  - One or two sentences, maximum 160 characters
-  - Should read like a Google search result snippet — informative and specific
+    Wrong: "The Federal Reserve held a meeting Wednesday to discuss monetary policy."
+    Right: "The Federal Reserve held rates steady Wednesday for the third straight meeting,
+            with Chair Jerome Powell signaling two cuts are still possible before year-end."
 
-STEP 4 — Submit the article to the API.
+  BODY (3–4 <h2> sections):
+    <h2>What Happened</h2>     — specifics, timeline, numbers, sequence of events
+    <h2>What People Are Saying</h2> — direct quotes, official reactions
+    <h2>What This Means</h2>   — real-world impact: money, health, law, daily life
+    <h2>What Happens Next</h2> — upcoming dates, next steps, things to watch
+
+  QUOTES:
+    Format: "Quote text," said First Last, Title at Organization.
+    Use "said" only. Never: stated / commented / noted / emphasized / articulated.
+    One direct quote minimum. Attribution always goes after the quote, inside <blockquote>.
+
+    Right: <blockquote>"We expect rates to fall by December," said Jerome Powell,
+           Chair of the Federal Reserve.</blockquote>
+    Wrong: <blockquote>"We expect rates to fall," he stated confidently.</blockquote>
+
+  ENDING:
+    End on a fact, an upcoming date, or a strong closing quote. Never summarize.
+    Never write "In conclusion" or "In summary". A strong kicker:
+      - "The vote heads to the Senate floor next Tuesday."
+      - "Shares are up 31% for the year."
+      - "The next rate decision is scheduled for September 17."
+
+  EXCERPT:
+    One sentence, 160 characters max.
+    Should work as a Google search snippet — specific and informative.
+    If unsure: shorten the lede sentence.
+
+  FEATURED IMAGE (mandatory — treat as required):
+    Every article must include a featured_image_url. Without it:
+      - OG/Twitter cards show a generic placeholder → fewer social clicks
+      - Google Discover won't surface the article → lost traffic
+      - JSON-LD NewsArticle structured data has no image → no Top Stories
+    Image must be at least 1200×630px. Direct URL ending in .jpg/.png/.webp.
+    How to get an image:
+      - Use the original source article's main image URL
+      - Fetch from Unsplash: GET https://api.unsplash.com/photos/random
+          ?query={topic_keywords}&orientation=landscape
+          Header: Authorization: Client-ID YOUR_UNSPLASH_KEY
+          Use the response's urls.regular or urls.full field
+      - Fetch from Pexels: GET https://api.pexels.com/v1/search
+          ?query={topic_keywords}&orientation=landscape&per_page=1
+          Header: Authorization: YOUR_PEXELS_KEY
+          Use response.photos[0].src.large2x
+    If no relevant image is available, omit the field rather than use
+    an irrelevant placeholder — but always try to find one first.
+
+  SEO FIELDS (required for ranking — fill all three):
+    seo_title: 50–70 chars. Include the primary search keyword naturally.
+      Same content as title but phrased for search intent.
+      Example: if title = "Fed Holds Rates — And Wall Street Is Nervous"
+               seo_title = "Fed Holds Interest Rates Steady July 2026, Two Cuts Expected"
+
+    seo_description: 120–160 chars. Answer the searcher's question directly.
+      Include primary keyword. No clickbait. No trailing ellipsis.
+      Example: "The Federal Reserve held rates steady for the third meeting in a row.
+               Chair Powell signaled two cuts are still possible before year-end."
+
+    seo_keywords: 3–5 comma-separated search phrases. Mix broad + specific.
+      Include date/year for time-sensitive topics.
+      Example: "fed rate decision july 2026, federal reserve interest rates,
+               jerome powell fomc, interest rate hold 2026"
+
+=========================================================
+HUMAN WRITING RULES — READ CAREFULLY. THESE ARE MANDATORY.
+=========================================================
+
+  SENTENCE VARIETY (most important):
+    Mix short and long. Short punch. Then a longer sentence that fills in context and
+    detail. Then a question? Then the answer. Every sentence the same length is the
+    number-one signal that AI wrote this. Deliberately break the rhythm.
+
+    AI pattern (reject): "The stock fell on Thursday. Investors were concerned. Analysts
+    noted the decline. Trading volume was high."
+
+    Human pattern (write this): "The stock fell 8% Thursday — its worst single-day drop
+    since March 2020. Investors were rattled. But analysts who've tracked the company for
+    years mostly shrugged: the fundamentals haven't changed."
+
+  CONTRACTIONS:
+    Always use them. "didn't" not "did not". "won't" not "will not". "it's" not "it is".
+    "he's" "that's" "they've" "we're". No contractions = sounds robotic.
+
+  STRONG VERBS:
+    surged, plunged, slammed, vowed, warned, clinched, reversed, scrapped, unveiled,
+    rejected, cleared, stalled, clawed back, rattled, spooked.
+    Not: increased, decreased, made a decision, expressed concern, announced changes.
+
+  PARAGRAPH VARIETY:
+    Some paragraphs are one sentence. Some are four. Deliberately vary them. A
+    one-sentence paragraph after a long block hits like a punch. Use it.
+
+  SPECIFICITY PER PARAGRAPH:
+    Every paragraph needs at least one concrete detail — a number, a name, a date, a
+    dollar amount, a location. Any paragraph without one is padding. Cut or rewrite it.
+
+    Weak: "The company saw significant revenue growth."
+    Strong: "Revenue climbed 34% year-over-year to $2.8 billion, topping Wall Street's
+             $2.6 billion consensus estimate."
+
+  BANNED PHRASES — never write any of these:
+    "It's worth noting that..."       → delete, just say the thing
+    "It's important to mention..."    → same
+    "Furthermore," / "Moreover,"      → use "And" or restructure
+    "Additionally,"                   → same
+    "In conclusion," / "In summary,"  → never close with a summary header
+    "In today's fast-paced world..."  → never, ever
+    "It cannot be overstated..."      → delete
+    "At the end of the day..."        → cliché, cut
+    "utilize"                         → use "use"
+    "leverage" as a non-financial verb → cut or rephrase
+    "going forward"                   → "from here" or restructure
+    "robust" for software or plans    → be specific about what makes it strong
+    "landscape" / "space" as jargon   → name the actual sector or market
+    "amid ongoing..."                 → say specifically what's ongoing and why it matters
+
+=========================================================
+SELF-CHECK BEFORE SUBMITTING:
+=========================================================
+
+  Before you call the API, answer every question. Fix any "no" before submitting.
+
+  CONTENT QUALITY:
+  □ Does the first sentence contain the complete news?
+  □ Does every paragraph have at least one specific detail (number, name, date)?
+  □ Do sentences vary in length — short punches mixed with longer ones?
+  □ Did I use natural contractions throughout?
+  □ Are all quotes formatted "quote," said First Last, Title at Org?
+  □ Did I avoid every banned phrase?
+  □ Does the ending land on a fact, date, or strong quote — not a summary?
+  □ Is the whole article HTML, with no markdown symbols at all?
+  □ Would this article run on the AP wire without anyone knowing it was generated?
+
+  IMAGE:
+  □ Is featured_image_url included?
+  □ Is it a direct image URL (not a webpage URL)?
+  □ Is it at least 1200×630px?
+  □ Is it relevant to the article topic?
+
+  SEO:
+  □ Is seo_title 50–70 chars and includes the primary keyword?
+  □ Is seo_description 120–160 chars and answers the searcher's question?
+  □ Does seo_keywords have 3–5 comma-separated search phrases?
+  □ Does the title match what someone would actually search on Google right now?
+
+  If any answer is no, fix that section before submitting.
+
+=========================================================
+STEP 4 — Submit.
+=========================================================
 
   POST http://news.hisabeasy.online/api/v1/news/submit
   Header: X-API-Key: YOUR_API_KEY_HERE
   Header: Content-Type: application/json
 
-  Body:
   {
-    "category_slug": "<slug from step 1>",
-    "title": "<your headline>",
-    "content": "<full article in HTML>",
-    "excerpt": "<1-2 sentences, max 160 chars>",
-    "author": "<your name or agent name>",
-    "source_url": "<URL of your main source, if you have one>",
-    "submitted_by_name": "<your name>",
+    "category_slug":      "<slug from step 1>",
+    "title":              "<headline, under 70 chars>",
+    "content":            "<full HTML article, 600+ words>",
+    "excerpt":            "<1 sentence, max 160 chars>",
+    "featured_image_url": "<direct image URL, 1200×630px min — required for quality>",
+    "seo_title":          "<50–70 chars, primary keyword included>",
+    "seo_description":    "<120–160 chars, answers the searcher's question>",
+    "seo_keywords":       "<3–5 comma-separated search phrases>",
+    "author":             "<reporter name or desk, e.g. 'Business Desk'>",
+    "source_url":         "<primary source URL if you have one>",
+    "submitted_by_name":  "<your name or agent name>",
     "submitted_by_email": "<your email>"
   }
 
-STEP 5 — Handle the response and report to the user.
+=========================================================
+STEP 5 — Handle the response.
+=========================================================
 
-  202 → Success. Tell the user: "Article submitted — ID #[id]. The admin will
-        review it and publish it shortly. Once live it will be indexed by Google."
+  202 → Tell the user: "Article submitted — ID #[id]. Pending admin review.
+        Goes live once approved and will be indexed by Google shortly after."
 
   401 → "The API key is invalid or inactive. Contact the portal admin."
-  422 → Read the errors field. Fix the specific fields mentioned and resubmit.
-  429 → Wait 60 seconds, then retry once.
-  500 → Wait 30 seconds, then retry once.
+  422 → Read the errors field. Fix each listed field exactly. Resubmit.
+  429 → Wait 60 seconds. Retry once.
+  500 → Wait 30 seconds. Retry once.
 
-After a 202 response, the article sits in a pending queue at
-http://news.hisabeasy.online/admin/articles under "Pending Review". The admin reads
-it and either approves (goes live and gets indexed) or rejects (stays hidden).
-You do not need to do anything further after a successful submission.
+After a 202, the article is in the pending queue. The admin approves or rejects it.
+You don't need to do anything further after a successful submission.
 ```
 
 ---
 
-## 12. Quick Reference
+## 13. Quick Reference
 
 ```
 Base URL:  http://news.hisabeasy.online/api/v1
 Auth:      X-API-Key: YOUR_KEY  (on every request)
 
+Endpoints:
+  GET  /categories      list active categories and their slugs
+  POST /news/submit     submit your written article for review
+
 Workflow:
-  1. GET  /categories      find which category slugs exist
-  2. Find trending topic   your job — use search or current knowledge
-  3. Write full article    HTML body, 500+ words, headline under 70 chars
-  4. POST /news/submit     send to API
-  5. Admin approves        article goes live
+  1. GET  /categories      get valid category slugs
+  2. Find trending topic   use search or current knowledge
+  3. Find a relevant image min 1200×630px, direct URL
+  4. Write full article    HTML body, 600+ words, headline under 70 chars
+  5. Write SEO fields      seo_title, seo_description, seo_keywords
+  6. POST /news/submit     send to API
+  7. Admin approves        article goes live
 
 Required fields on /news/submit:
   category_slug   string  — slug from /categories
-  title           string  — max 255 chars, under 70 ideal
-  content         string  — HTML body, min 100 chars
+  title           string  — max 255 chars, under 70 ideal for SEO
+  content         string  — HTML body, min 100 chars (600+ strongly recommended)
 
-Optional fields:
-  excerpt              auto-generated if missing (160 chars from content)
+Required for quality (technically optional but treat as required):
+  featured_image_url   direct image URL, min 1200×630px
+                       needed for OG tags, Twitter cards, Google Discover, JSON-LD
+
+SEO fields (optional but fill all three for best ranking):
+  seo_title          50–70 chars, primary keyword included
+  seo_description    120–160 chars, answers the searcher's question
+  seo_keywords       3–5 comma-separated search phrases
+
+Other optional fields:
+  excerpt              auto-generated from first 160 chars if missing
   author               author display name
-  source_url           link to original source
-  featured_image_url   1200×630px image URL
-  submitted_by_name    your name (admin sees it, not public)
+  source_url           link to original source (boosts credibility)
+  submitted_by_name    your name (admin only, never public)
   submitted_by_email   your email (admin only, never public)
 
 Responses:
@@ -790,7 +1185,6 @@ Responses:
   404  unknown category slug
   422  validation error — read the errors field
   429  rate limited — check Retry-After header
-
 Rate limits:
   /categories   60 per minute
   /news/submit  10 per minute
