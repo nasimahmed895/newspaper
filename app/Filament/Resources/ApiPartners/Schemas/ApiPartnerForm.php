@@ -8,7 +8,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Str;
 
 class ApiPartnerForm
 {
@@ -51,14 +50,8 @@ class ApiPartnerForm
                         TextInput::make('api_key')
                             ->label('API Key')
                             ->disabled()
+                            ->copyable()
                             ->helperText('Share this key with the partner. They send it as X-API-Key header.')
-                            ->suffixAction(
-                                \Filament\Actions\Action::make('copy')
-                                    ->icon(\Filament\Support\Icons\Heroicon::OutlinedClipboard)
-                                    ->copyable()
-                                    ->copyableState(fn ($state) => $state)
-                                    ->tooltip('Copy to clipboard')
-                            )
                             ->visibleOn('edit'),
                     ]),
             ]);
