@@ -48,6 +48,10 @@ return [
         'secret_key' => env('UNSPLASH_SECRET_KEY'),
     ],
 
+    'news_api' => [
+        'key' => env('NEWS_API_KEY'),
+    ],
+
     'google' => [
         'indexing_api_key'     => env('GOOGLE_INDEXING_API_KEY'),
         'indexing_client_email'=> env('GOOGLE_INDEXING_CLIENT_EMAIL'),

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Articles\Schemas;
 
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -86,8 +87,16 @@ class ArticleForm
                     ->description('Publish status and featured image')
                     ->columns(3)
                     ->schema([
+                        Select::make('status')
+                            ->options([
+                                'pending'   => 'Pending Review',
+                                'published' => 'Published',
+                                'rejected'  => 'Rejected',
+                            ])
+                            ->default('published')
+                            ->required(),
                         Toggle::make('is_published')
-                            ->label('Published')
+                            ->label('Live on Site')
                             ->inline(false),
                         Toggle::make('is_trending')
                             ->label('Mark as Trending')
@@ -99,6 +108,25 @@ class ArticleForm
                             ->maxValue(60)
                             ->default(5),
                     ]),
+                Section::make('Submission Info')
+                    ->description('Read-only — populated when article arrives via API')
+                    ->columns(2)
+                    ->collapsed()
+                    ->schema([
+                        Placeholder::make('api_partner_name')
+                            ->label('Source Website')
+                            ->content(fn ($record) => $record?->apiPartner?->name ?? '—'),
+                        Placeholder::make('submitted_by_name')
+                            ->label('Submitted By')
+                            ->content(fn ($record) => $record?->submitted_by_name ?? '—'),
+                        Placeholder::make('submitted_by_email')
+                            ->label('Submitter Email')
+                            ->content(fn ($record) => $record?->submitted_by_email ?? '—'),
+                        Placeholder::make('source_url')
+                            ->label('Original Source URL')
+                            ->content(fn ($record) => $record?->source_url ?? '—'),
+                    ])
+                    ->visibleOn('edit'),
             ]);
     }
 }

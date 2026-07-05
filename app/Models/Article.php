@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Article extends Model
@@ -22,6 +23,10 @@ class Article extends Model
         'source_url',
         'trending_topic',
         'is_published',
+        'status',
+        'api_partner_id',
+        'submitted_by_name',
+        'submitted_by_email',
         'published_at',
         'seo_title',
         'seo_description',
@@ -45,6 +50,16 @@ class Article extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function apiPartner(): BelongsTo
+    {
+        return $this->belongsTo(ApiPartner::class);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 
     public function scopePublished($query)
