@@ -61,7 +61,8 @@
     @endif
 
     {{-- Website + NewsMediaOrganization structured data --}}
-    <script type="application/ld+json">{!! json_encode([
+    @php
+    $siteJsonLd = json_encode([
         '@context' => 'https://schema.org',
         '@graph' => [
             $websiteStructuredData ?? [
@@ -95,7 +96,9 @@
                 'unnamedSourcesPolicy' => url('/editorial-policy'),
             ],
         ],
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    @endphp
+    <script type="application/ld+json">{!! $siteJsonLd !!}</script>
 
     {{-- RSS / Sitemap --}}
     <link rel="alternate" type="application/rss+xml" title="{{ config('app.name') }} RSS Feed" href="{{ url('/sitemap.xml') }}">
