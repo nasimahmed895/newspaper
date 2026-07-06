@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Articles\Tables;
 
 use App\Models\Article;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -11,10 +12,12 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class ArticlesTable
 {
@@ -22,6 +25,13 @@ class ArticlesTable
     {
         return $table
             ->columns([
+                ImageColumn::make('featured_image')
+                    ->label('Image')
+                    ->disk(null)
+                    ->width(80)
+                    ->height(50)
+                    ->extraImgAttributes(['style' => 'object-fit:cover;border-radius:4px;'])
+                    ->toggleable(),
                 TextColumn::make('title')
                     ->searchable()
                     ->limit(50)
@@ -123,6 +133,22 @@ class ArticlesTable
             ])
             ->bulkActions([
                 BulkActionGroup::make([
+                    BulkAction::make('bulk_approve')
+                        ->label('Approve & Publish')
+                        ->icon(Heroicon::OutlinedCheck)
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Approve & Publish Selected Articles')
+                        ->modalDescription('All selected articles will go live immediately.')
+                        ->modalSubmitActionLabel('Yes, Publish All')
+                        ->action(function (Collection $records): void {
+                            $records->each(fn (Article $record) => $record->update([
+                                'status'       => 'published',
+                                'is_published' => true,
+                                'published_at' => now(),
+                            ]));
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make(),
                 ]),
             ])
