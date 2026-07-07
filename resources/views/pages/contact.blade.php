@@ -126,7 +126,6 @@
                     <li><a href="{{ route('about') }}" class="text-sm text-red-600 hover:underline font-medium">About WorldPulse24</a></li>
                     <li><a href="{{ route('editorial-policy') }}" class="text-sm text-red-600 hover:underline font-medium">Editorial Policy</a></li>
                     <li><a href="{{ route('privacy-policy') }}" class="text-sm text-red-600 hover:underline font-medium">Privacy Policy</a></li>
-                    <li><a href="/admin" class="text-sm text-red-600 hover:underline font-medium">Admin Login</a></li>
                 </ul>
             </div>
         </div>

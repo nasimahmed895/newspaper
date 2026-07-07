@@ -375,7 +375,6 @@
                         <li><a href="/contact" class="text-sm transition {{ request()->routeIs('contact') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Contact Us</a></li>
                         <li><a href="/contact" class="text-sm text-gray-400 hover:text-white transition">Submit a Correction</a></li>
                         <li><a href="/privacy-policy" class="text-sm transition {{ request()->routeIs('privacy-policy') ? 'text-white' : 'text-gray-400 hover:text-white' }}">Privacy Policy</a></li>
-                        <li><a href="/admin" class="text-sm text-gray-400 hover:text-white transition">Admin Login</a></li>
                     </ul>
                 </div>
 
