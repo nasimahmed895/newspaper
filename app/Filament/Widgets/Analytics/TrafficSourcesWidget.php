@@ -4,6 +4,7 @@ namespace App\Filament\Widgets\Analytics;
 
 use App\Models\PageView;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Schema;
 
 class TrafficSourcesWidget extends ChartWidget
 {
@@ -29,34 +30,25 @@ class TrafficSourcesWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $period = $this->filter ?? 'today';
-        $data   = PageView::trafficSources($period);
+        $labels = ['Direct', 'Organic Search', 'Social Media', 'Referral'];
+        $colors = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6'];
+        $empty  = ['labels' => $labels, 'datasets' => [['data' => [0, 0, 0, 0], 'backgroundColor' => $colors, 'hoverOffset' => 6]]];
 
-        $labels = [
-            'direct'  => 'Direct',
-            'organic' => 'Organic Search',
-            'social'  => 'Social Media',
-            'referral' => 'Referral',
-        ];
+        try {
+            if (!Schema::hasTable('page_views')) return $empty;
 
-        $colors = [
-            'direct'   => '#6366f1',
-            'organic'  => '#10b981',
-            'social'   => '#f59e0b',
-            'referral' => '#3b82f6',
-        ];
+            $data   = PageView::trafficSources($this->filter ?? 'today');
+            $counts = [
+                $data['direct']   ?? 0,
+                $data['organic']  ?? 0,
+                $data['social']   ?? 0,
+                $data['referral'] ?? 0,
+            ];
 
-        $keys   = array_keys($labels);
-        $counts = array_map(fn ($k) => $data[$k] ?? 0, $keys);
-
-        return [
-            'labels'   => array_values($labels),
-            'datasets' => [[
-                'data'            => $counts,
-                'backgroundColor' => array_values($colors),
-                'hoverOffset'     => 6,
-            ]],
-        ];
+            return ['labels' => $labels, 'datasets' => [['data' => $counts, 'backgroundColor' => $colors, 'hoverOffset' => 6]]];
+        } catch (\Throwable) {
+            return $empty;
+        }
     }
 
     protected function getType(): string
@@ -67,10 +59,8 @@ class TrafficSourcesWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'plugins' => [
-                'legend' => ['position' => 'bottom'],
-            ],
-            'cutout' => '65%',
+            'plugins' => ['legend' => ['position' => 'bottom']],
+            'cutout'  => '65%',
         ];
     }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Filament\Widgets\Analytics;
 
-use App\Models\PageView;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 
 class TopArticlesWidget extends TableWidget
 {
@@ -30,17 +30,21 @@ class TopArticlesWidget extends TableWidget
 
     public function table(Table $table): Table
     {
+        $tableReady = $this->tableExists();
+
         return $table
             ->query(
-                \App\Models\PageView::query()
-                    ->selectRaw('article_id, COUNT(*) as views, COUNT(DISTINCT ip_hash) as unique_visitors')
-                    ->whereNotNull('article_id')
-                    ->when($this->period === 'today', fn ($q) => $q->whereDate('created_at', today()))
-                    ->when($this->period === 'week',  fn ($q) => $q->where('created_at', '>=', now()->startOfWeek()))
-                    ->when($this->period === 'month', fn ($q) => $q->where('created_at', '>=', now()->startOfMonth()))
-                    ->groupBy('article_id')
-                    ->orderByDesc('views')
-                    ->limit(10)
+                $tableReady
+                    ? \App\Models\PageView::query()
+                        ->selectRaw('article_id, COUNT(*) as views, COUNT(DISTINCT ip_hash) as unique_visitors')
+                        ->whereNotNull('article_id')
+                        ->when($this->period === 'today', fn ($q) => $q->whereDate('created_at', today()))
+                        ->when($this->period === 'week',  fn ($q) => $q->where('created_at', '>=', now()->startOfWeek()))
+                        ->when($this->period === 'month', fn ($q) => $q->where('created_at', '>=', now()->startOfMonth()))
+                        ->groupBy('article_id')
+                        ->orderByDesc('views')
+                        ->limit(10)
+                    : \App\Models\Article::query()->whereRaw('1 = 0') // empty query
             )
             ->columns([
                 TextColumn::make('article.title')
@@ -77,7 +81,18 @@ class TopArticlesWidget extends TableWidget
                     ->color($this->period === 'month' ? 'primary' : 'gray')
                     ->action(fn () => $this->period = 'month'),
             ])
+            ->emptyStateHeading($tableReady ? 'No data yet' : 'Migration required')
+            ->emptyStateDescription($tableReady ? 'Visit some articles to populate this.' : 'Run: php artisan migrate')
             ->paginated(false)
             ->striped();
+    }
+
+    private function tableExists(): bool
+    {
+        try {
+            return Schema::hasTable('page_views');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

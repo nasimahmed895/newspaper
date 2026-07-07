@@ -4,6 +4,7 @@ namespace App\Filament\Widgets\Analytics;
 
 use App\Models\PageView;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Schema;
 
 class PageViewsChartWidget extends ChartWidget
 {
@@ -26,39 +27,52 @@ class PageViewsChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $chart  = PageView::last30DaysChart();
-        $filter = $this->filter ?? 'both';
+        $empty = $this->emptyDataset();
 
-        $datasets = [];
+        try {
+            if (!Schema::hasTable('page_views')) return $empty;
 
-        if (in_array($filter, ['views', 'both'])) {
-            $datasets[] = [
-                'label'           => 'Page Views',
-                'data'            => $chart['views'],
-                'borderColor'     => '#3b82f6',
-                'backgroundColor' => 'rgba(59,130,246,0.1)',
-                'fill'            => true,
-                'tension'         => 0.4,
-                'pointRadius'     => 3,
-            ];
+            $chart  = PageView::last30DaysChart();
+            $filter = $this->filter ?? 'both';
+            $datasets = [];
+
+            if (in_array($filter, ['views', 'both'])) {
+                $datasets[] = [
+                    'label'           => 'Page Views',
+                    'data'            => $chart['views'],
+                    'borderColor'     => '#3b82f6',
+                    'backgroundColor' => 'rgba(59,130,246,0.1)',
+                    'fill'            => true,
+                    'tension'         => 0.4,
+                    'pointRadius'     => 3,
+                ];
+            }
+
+            if (in_array($filter, ['visitors', 'both'])) {
+                $datasets[] = [
+                    'label'           => 'Unique Visitors',
+                    'data'            => $chart['visitors'],
+                    'borderColor'     => '#10b981',
+                    'backgroundColor' => 'rgba(16,185,129,0.1)',
+                    'fill'            => true,
+                    'tension'         => 0.4,
+                    'pointRadius'     => 3,
+                ];
+            }
+
+            return ['labels' => $chart['labels'], 'datasets' => $datasets];
+        } catch (\Throwable) {
+            return $empty;
         }
+    }
 
-        if (in_array($filter, ['visitors', 'both'])) {
-            $datasets[] = [
-                'label'           => 'Unique Visitors',
-                'data'            => $chart['visitors'],
-                'borderColor'     => '#10b981',
-                'backgroundColor' => 'rgba(16,185,129,0.1)',
-                'fill'            => true,
-                'tension'         => 0.4,
-                'pointRadius'     => 3,
-            ];
+    private function emptyDataset(): array
+    {
+        $labels = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $labels[] = now()->subDays($i)->format('M j');
         }
-
-        return [
-            'labels'   => $chart['labels'],
-            'datasets' => $datasets,
-        ];
+        return ['labels' => $labels, 'datasets' => []];
     }
 
     protected function getType(): string
@@ -69,15 +83,8 @@ class PageViewsChartWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'plugins' => [
-                'legend' => ['display' => true, 'position' => 'top'],
-            ],
-            'scales' => [
-                'y' => [
-                    'beginAtZero' => true,
-                    'ticks'       => ['precision' => 0],
-                ],
-            ],
+            'plugins' => ['legend' => ['display' => true, 'position' => 'top']],
+            'scales'  => ['y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]]],
         ];
     }
 }

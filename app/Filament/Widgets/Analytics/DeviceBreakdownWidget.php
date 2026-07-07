@@ -4,6 +4,7 @@ namespace App\Filament\Widgets\Analytics;
 
 use App\Models\PageView;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Schema;
 
 class DeviceBreakdownWidget extends ChartWidget
 {
@@ -29,21 +30,26 @@ class DeviceBreakdownWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $period = $this->filter ?? 'today';
-        $data   = PageView::deviceBreakdown($period);
+        $labels = ['Desktop', 'Mobile', 'Tablet'];
+        $colors = ['#3b82f6', '#10b981', '#f59e0b'];
+        $empty  = ['labels' => $labels, 'datasets' => [['data' => [0, 0, 0], 'backgroundColor' => $colors, 'hoverOffset' => 6]]];
 
-        return [
-            'labels'   => ['Desktop', 'Mobile', 'Tablet'],
-            'datasets' => [[
-                'data'            => [
-                    $data['desktop'] ?? 0,
-                    $data['mobile']  ?? 0,
-                    $data['tablet']  ?? 0,
-                ],
-                'backgroundColor' => ['#3b82f6', '#10b981', '#f59e0b'],
-                'hoverOffset'     => 6,
-            ]],
-        ];
+        try {
+            if (!Schema::hasTable('page_views')) return $empty;
+
+            $data = PageView::deviceBreakdown($this->filter ?? 'today');
+
+            return [
+                'labels'   => $labels,
+                'datasets' => [[
+                    'data'            => [$data['desktop'] ?? 0, $data['mobile'] ?? 0, $data['tablet'] ?? 0],
+                    'backgroundColor' => $colors,
+                    'hoverOffset'     => 6,
+                ]],
+            ];
+        } catch (\Throwable) {
+            return $empty;
+        }
     }
 
     protected function getType(): string
@@ -54,10 +60,8 @@ class DeviceBreakdownWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'plugins' => [
-                'legend' => ['position' => 'bottom'],
-            ],
-            'cutout' => '65%',
+            'plugins' => ['legend' => ['position' => 'bottom']],
+            'cutout'  => '65%',
         ];
     }
 }
