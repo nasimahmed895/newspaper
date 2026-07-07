@@ -74,7 +74,7 @@
                     </h1>
 
                     {{-- Author + Share Bar --}}
-                    <div class="flex items-center justify-between gap-4 py-4 border-y border-gray-100 mb-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-y border-gray-100 mb-6">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-red-800 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0"
                                  itemprop="author" itemscope itemtype="https://schema.org/Person">
@@ -87,7 +87,7 @@
                             </div>
                         </div>
                         {{-- Quick share --}}
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 self-end sm:self-auto">
                             <a href="https://twitter.com/intent/tweet?text={{ urlencode($article->title) }}&url={{ urlencode(route('articles.show', $article->slug)) }}"
                                target="_blank" rel="noopener"
                                class="w-8 h-8 bg-gray-100 hover:bg-black hover:text-white text-gray-600 rounded-full flex items-center justify-center transition"
@@ -162,12 +162,12 @@
 
                     {{-- Author Box (EEAT) --}}
                     <div class="mt-8 pt-8 border-t border-gray-100">
-                        <div class="bg-slate-50 rounded-2xl p-6 flex items-start gap-5">
+                        <div class="bg-slate-50 rounded-2xl p-6 flex flex-col items-center sm:flex-row sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
                             <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-800 rounded-full flex items-center justify-center text-white text-2xl font-black flex-shrink-0">
                                 {{ strtoupper(($article->author ?? 'WorldPulse24 Desk')[0]) }}
                             </div>
                             <div class="min-w-0">
-                                <div class="flex items-center flex-wrap gap-2 mb-1">
+                                <div class="flex items-center justify-center sm:justify-start flex-wrap gap-2 mb-1">
                                     <h3 class="font-black text-gray-900">{{ $article->author ?? 'WorldPulse24 Desk' }}</h3>
                                     <span class="text-[11px] bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">WorldPulse24 Staff</span>
                                 </div>
