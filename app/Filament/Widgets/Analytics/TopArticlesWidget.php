@@ -5,7 +5,6 @@ namespace App\Filament\Widgets\Analytics;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
 class TopArticlesWidget extends TableWidget
@@ -20,11 +19,7 @@ class TopArticlesWidget extends TableWidget
 
     public static function canView(): bool
     {
-        try {
-            return Schema::hasTable('page_views');
-        } catch (\Throwable) {
-            return false;
-        }
+        try { return Schema::hasTable('page_views'); } catch (\Throwable) { return false; }
     }
 
     public function getTableHeading(): string
@@ -42,20 +37,18 @@ class TopArticlesWidget extends TableWidget
         return $table
             ->query(
                 \App\Models\PageView::query()
-                    ->selectRaw('article_id, COUNT(*) as views, COUNT(DISTINCT ip_hash) as unique_visitors')
+                    ->selectRaw('MIN(id) as id, article_id, COUNT(*) as views, COUNT(DISTINCT ip_hash) as unique_visitors')
                     ->whereNotNull('article_id')
                     ->when($this->period === 'today', fn ($q) => $q->whereDate('created_at', today()))
                     ->when($this->period === 'week',  fn ($q) => $q->where('created_at', '>=', now()->startOfWeek()))
                     ->when($this->period === 'month', fn ($q) => $q->where('created_at', '>=', now()->startOfMonth()))
                     ->groupBy('article_id')
                     ->orderByDesc('views')
-                    ->limit(10)
             )
             ->columns([
                 TextColumn::make('article.title')
                     ->label('Article')
                     ->limit(60)
-                    ->searchable(query: fn (Builder $query, string $search) => $query)
                     ->url(fn ($record) => $record->article ? route('articles.show', $record->article->slug) : null)
                     ->openUrlInNewTab(),
                 TextColumn::make('article.category.name')
@@ -73,22 +66,23 @@ class TopArticlesWidget extends TableWidget
                     ->alignEnd(),
             ])
             ->headerActions([
-                \Filament\Actions\Action::make('today')
+                \Filament\Actions\Action::make('period_today')
                     ->label('Today')
                     ->color($this->period === 'today' ? 'primary' : 'gray')
                     ->action(fn () => $this->period = 'today'),
-                \Filament\Actions\Action::make('week')
+                \Filament\Actions\Action::make('period_week')
                     ->label('Week')
                     ->color($this->period === 'week' ? 'primary' : 'gray')
                     ->action(fn () => $this->period = 'week'),
-                \Filament\Actions\Action::make('month')
+                \Filament\Actions\Action::make('period_month')
                     ->label('Month')
                     ->color($this->period === 'month' ? 'primary' : 'gray')
                     ->action(fn () => $this->period = 'month'),
             ])
             ->emptyStateHeading('No data yet')
-            ->emptyStateDescription('Visit some articles to populate this.')
-            ->paginated(false)
+            ->emptyStateDescription('Visit some articles to start tracking.')
+            ->paginated([10, 25])
+            ->defaultPaginationPageOption(10)
             ->striped();
     }
 }
