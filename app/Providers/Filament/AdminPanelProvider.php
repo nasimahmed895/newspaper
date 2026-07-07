@@ -10,6 +10,11 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use App\Filament\Widgets\Analytics\AnalyticsOverviewWidget;
+use App\Filament\Widgets\Analytics\DeviceBreakdownWidget;
+use App\Filament\Widgets\Analytics\PageViewsChartWidget;
+use App\Filament\Widgets\Analytics\TopArticlesWidget;
+use App\Filament\Widgets\Analytics\TrafficSourcesWidget;
 use App\Filament\Widgets\NewsStatsWidget;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -48,8 +53,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                NewsStatsWidget::class,
                 AccountWidget::class,
+                NewsStatsWidget::class,
+                AnalyticsOverviewWidget::class,
+                PageViewsChartWidget::class,
+                TopArticlesWidget::class,
+                TrafficSourcesWidget::class,
+                DeviceBreakdownWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
