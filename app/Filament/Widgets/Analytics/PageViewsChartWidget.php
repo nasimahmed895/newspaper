@@ -16,6 +16,11 @@ class PageViewsChartWidget extends ChartWidget
 
     protected ?string $pollingInterval = '300s';
 
+    public static function canView(): bool
+    {
+        try { return Schema::hasTable('page_views'); } catch (\Throwable) { return false; }
+    }
+
     protected function getFilters(): ?array
     {
         return [
@@ -30,8 +35,6 @@ class PageViewsChartWidget extends ChartWidget
         $empty = $this->emptyDataset();
 
         try {
-            if (!Schema::hasTable('page_views')) return $empty;
-
             $chart  = PageView::last30DaysChart();
             $filter = $this->filter ?? 'both';
             $datasets = [];

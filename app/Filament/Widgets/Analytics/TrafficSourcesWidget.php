@@ -19,6 +19,11 @@ class TrafficSourcesWidget extends ChartWidget
 
     protected ?string $pollingInterval = '120s';
 
+    public static function canView(): bool
+    {
+        try { return Schema::hasTable('page_views'); } catch (\Throwable) { return false; }
+    }
+
     protected function getFilters(): ?array
     {
         return [

@@ -16,6 +16,15 @@ class AnalyticsOverviewWidget extends StatsOverviewWidget
 
     protected ?string $pollingInterval = '60s';
 
+    public static function canView(): bool
+    {
+        try {
+            return Schema::hasTable('page_views');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     protected function getStats(): array
     {
         if (!$this->tableReady()) {
