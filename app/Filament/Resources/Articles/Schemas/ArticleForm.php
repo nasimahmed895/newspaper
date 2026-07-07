@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\Articles\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Set;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -60,6 +62,41 @@ class ArticleForm
                             ->fileAttachmentsDisk('public')
                             ->fileAttachmentsDirectory('attachments')
                             ->columnSpanFull(),
+                    ]),
+                Section::make('Featured Image')
+                    ->description('Upload a file or enter an external image URL — enter URL last to override upload')
+                    ->columns(2)
+                    ->schema([
+                        FileUpload::make('featured_image')
+                            ->label('Upload Image')
+                            ->image()
+                            ->disk('public')
+                            ->directory('articles/featured')
+                            ->nullable()
+                            ->columnSpanFull()
+                            ->afterStateHydrated(function (Set $set, $state) {
+                                if ($state && filter_var($state, FILTER_VALIDATE_URL)) {
+                                    $set('featured_image', null);
+                                    $set('featured_image_url_input', $state);
+                                }
+                            }),
+                        TextInput::make('featured_image_url_input')
+                            ->label('Or Image URL')
+                            ->url()
+                            ->placeholder('https://example.com/image.jpg')
+                            ->helperText('Paste external URL — saves to featured image field directly')
+                            ->dehydrated(false)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (Set $set, $state) {
+                                if ($state) {
+                                    $set('featured_image', $state);
+                                }
+                            })
+                            ->columnSpanFull(),
+                        TextInput::make('image_credit')
+                            ->label('Image Credit')
+                            ->maxLength(255)
+                            ->placeholder('Photo by John Doe'),
                     ]),
                 Section::make('SEO & Excerpt')
                     ->description('Search engine optimization fields')

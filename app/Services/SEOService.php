@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Article;
 use App\Models\Category;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SEOService
 {
@@ -14,7 +15,7 @@ class SEOService
     public function articleStructuredData(Article $article): array
     {
         $image = $article->featured_image
-            ? [asset($article->featured_image)]
+            ? [$this->featuredImageUrl($article)]
             : [asset('/images/placeholder-news.jpg')];
 
         return [
@@ -122,7 +123,7 @@ class SEOService
             'og:description' => $article->seo_description ?? $article->excerpt,
             'og:type' => 'article',
             'og:url' => route('articles.show', $article->slug),
-            'og:image' => $article->featured_image ? asset($article->featured_image) : asset('/images/placeholder-news.jpg'),
+            'og:image' => $article->featured_image ? $this->featuredImageUrl($article) : asset('/images/placeholder-news.jpg'),
             'og:site_name' => config('app.name'),
             'og:locale' => 'en_US',
             'article:published_time' => $article->published_at?->toIso8601String() ?? $article->created_at->toIso8601String(),
@@ -140,7 +141,16 @@ class SEOService
             'twitter:card' => 'summary_large_image',
             'twitter:title' => $article->seo_title ?? $article->title,
             'twitter:description' => $article->seo_description ?? $article->excerpt,
-            'twitter:image' => $article->featured_image ? asset($article->featured_image) : asset('/images/placeholder-news.jpg'),
+            'twitter:image' => $article->featured_image ? $this->featuredImageUrl($article) : asset('/images/placeholder-news.jpg'),
         ];
+    }
+
+    private function featuredImageUrl(Article $article): string
+    {
+        $value = $article->featured_image;
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+        return Storage::disk('public')->url($value);
     }
 }

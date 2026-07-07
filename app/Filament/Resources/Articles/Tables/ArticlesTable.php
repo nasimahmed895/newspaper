@@ -28,6 +28,12 @@ class ArticlesTable
                 ImageColumn::make('featured_image')
                     ->label('Image')
                     ->disk(null)
+                    ->getStateUsing(function ($record) {
+                        $value = $record->featured_image;
+                        if (!$value) return null;
+                        if (filter_var($value, FILTER_VALIDATE_URL)) return $value;
+                        return \Illuminate\Support\Facades\Storage::disk('public')->url($value);
+                    })
                     ->width(80)
                     ->height(50)
                     ->extraImgAttributes(['style' => 'object-fit:cover;border-radius:4px;'])
